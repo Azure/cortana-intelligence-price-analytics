@@ -1,0 +1,13 @@
+﻿{
+  "name": "GetBulkForecasts_AzureMLLinkedService",
+  "properties": {
+    "description": "Get Bulk Forecasts out of the model",
+    "hubName": "pricingdemodf_hub",
+    "type": "AzureML",
+    "typeProperties": {
+      "mlEndpoint": "https://ussouthcentral.services.azureml.net/subscriptions/4ae34fb43acd4b688941ffdf25b0e8f2/services/b8e6cfef7e93439b9e62f90bd494322d/jobs?api-version=2.0",
+      "apiKey": "**********",
+      "tenant": "microsoft.onmicrosoft.com"
+    }
+  }
+}

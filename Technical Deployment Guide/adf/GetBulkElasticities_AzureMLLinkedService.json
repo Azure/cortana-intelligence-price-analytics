@@ -1,0 +1,13 @@
+﻿{
+  "name": "GetBulkElasticities_AzureMLLinkedService",
+  "properties": {
+    "description": "Service to extract computed elasticities from the model",
+    "hubName": "pricingdemodf_hub",
+    "type": "AzureML",
+    "typeProperties": {
+      "mlEndpoint": "https://ussouthcentral.services.azureml.net/subscriptions/4ae34fb43acd4b688941ffdf25b0e8f2/services/2e05772ba34d47ff9229dd64b4c2ed52/jobs?api-version=2.0",
+      "apiKey": "**********",
+      "tenant": "microsoft.onmicrosoft.com"
+    }
+  }
+}

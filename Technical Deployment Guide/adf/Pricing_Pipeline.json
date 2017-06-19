@@ -1,0 +1,285 @@
+﻿{
+  "name": "Pricing_Pipeline",
+  "properties": {
+    "description": "Weekly model retrain and score pipeline",
+    "activities": [
+      {
+        "type": "AzureMLBatchExecution",
+        "typeProperties": {
+          "webServiceOutputs": {
+            "output1": "BuildModel_Log_Dataset"
+          },
+          "webServiceInputs": {
+            "input1": "cleaned_transactiondata_AzureBlobDataset"
+          },
+          "globalParameters": {
+            "datasetName": "latestDemoBuild",
+            "forecastPeriod": 3
+          }
+        },
+        "inputs": [
+          {
+            "name": "cleaned_transactiondata_AzureBlobDataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "BuildModel_Log_Dataset"
+          }
+        ],
+        "policy": {
+          "timeout": "06:00:00",
+          "concurrency": 1,
+          "retry": 2
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "Retrain_Model_Activity",
+        "description": "Re-train the pricing engine model",
+        "linkedServiceName": "BuildModel_AzureMLLinkedService"
+      },
+      {
+        "type": "AzureMLBatchExecution",
+        "typeProperties": {
+          "webServiceOutputs": {
+            "output1": "elasticities_AzureBlobDataset"
+          },
+          "webServiceInputs": {
+            "input1": "params_BulkElasticities_AzureBlobDataset"
+          },
+          "globalParameters": {
+            "datasetName": "latestDemoBuild"
+          }
+        },
+        "inputs": [
+          {
+            "name": "params_BulkElasticities_AzureBlobDataset"
+          },
+          {
+            "name": "BuildModel_Log_Dataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "elasticities_AzureBlobDataset"
+          }
+        ],
+        "policy": {
+          "timeout": "01:00:00",
+          "concurrency": 1,
+          "retry": 1
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "GetBulkElasticities_AzureMLExecutionActivity",
+        "linkedServiceName": "GetBulkElasticities_AzureMLLinkedService"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select Item, SalesDate, SiteName as Site, ChannelName as Channel, CustomerSegment as Segment, ItemHierarchy, Quantity as Units, UnitPrice, UnitCost from pricingdata where \\'{0:yyyy-MM-dd}\\' >= SalesDate;', SliceEnd)"
+          },
+          "sink": {
+            "type": "BlobSink",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          }
+        },
+        "inputs": [
+          {
+            "name": "transactiondata_AzureSQLDataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "cleaned_transactiondata_AzureBlobDataset"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "retry": 3
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "clean_and_copy_originaldata"
+      },
+      {
+        "type": "AzureMLBatchExecution",
+        "typeProperties": {
+          "webServiceOutputs": {
+            "output1": "forecasts_AzureBlobDataSet"
+          },
+          "webServiceInputs": {
+            "input1": "params_BulkForecasts_AzureBlobDataset"
+          },
+          "globalParameters": {
+            "datasetName": "latestDemoBuild"
+          }
+        },
+        "inputs": [
+          {
+            "name": "params_BulkForecasts_AzureBlobDataset"
+          },
+          {
+            "name": "BuildModel_Log_Dataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "forecasts_AzureBlobDataSet"
+          }
+        ],
+        "policy": {
+          "timeout": "01:00:00",
+          "concurrency": 1,
+          "retry": 3
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "GetBulkForecasts_AzureMLExecutionActivity",
+        "linkedServiceName": "GetBulkForecasts_AzureMLLinkedService"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "BlobSource"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          }
+        },
+        "inputs": [
+          {
+            "name": "elasticities_AzureBlobDataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "etlBulkElasticities_AzureSQLDataset"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "retry": 2
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "bulkElasticities_to_DB_CopyActivity"
+      },
+      {
+        "type": "SqlServerStoredProcedure",
+        "typeProperties": {
+          "storedProcedureName": "spIngestBulkElasticities",
+          "storedProcedureParameters": {
+            "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)"
+          }
+        },
+        "inputs": [
+          {
+            "name": "etlBulkElasticities_AzureSQLDataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "elasticities_AzureSQLDataset"
+          }
+        ],
+        "policy": {
+          "timeout": "01:00:00",
+          "concurrency": 1,
+          "retry": 2
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "ingestElasticities_StoredProcedureActivity"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "BlobSource"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          }
+        },
+        "inputs": [
+          {
+            "name": "forecasts_AzureBlobDataSet"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "etlBulkForecasts_AzureSQLDataset"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "retry": 3
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "bulkForecasts_to_DB_CopyActivity"
+      },
+      {
+        "type": "SqlServerStoredProcedure",
+        "typeProperties": {
+          "storedProcedureName": "spIngestBulkForecasts",
+          "storedProcedureParameters": {
+            "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)",
+            "Source": "ADF_from_GetBulkForecasts"
+          }
+        },
+        "inputs": [
+          {
+            "name": "etlBulkForecasts_AzureSQLDataset"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "forecasts_AzureSQLDataset"
+          }
+        ],
+        "policy": {
+          "timeout": "01:00:00",
+          "concurrency": 1,
+          "retry": 3
+        },
+        "scheduler": {
+          "frequency": "Week",
+          "interval": 1
+        },
+        "name": "StoredProcedureActivity"
+      }
+    ],
+    "start": "2017-03-09T00:00:00Z",
+    "end": "2017-12-31T00:00:00Z",
+    "isPaused": false,
+    "pipelineMode": "Scheduled"
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/internalschemas/2015-08-01/Microsoft.DataFactory.Pipeline.json"
+}

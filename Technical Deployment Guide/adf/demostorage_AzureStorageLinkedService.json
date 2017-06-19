@@ -1,0 +1,11 @@
+﻿{
+  "name": "demostorage_AzureStorageLinkedService",
+  "properties": {
+    "description": "Blob Storage account for Pricing PCS",
+    "hubName": "pricingdemodf_hub",
+    "type": "AzureStorage",
+    "typeProperties": {
+      "connectionString": "DefaultEndpointsProtocol=https;AccountName=pricingpcsstorage;AccountKey=**********"
+    }
+  }
+}

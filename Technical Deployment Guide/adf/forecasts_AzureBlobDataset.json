@@ -1,0 +1,100 @@
+﻿{
+  "name": "forecasts_AzureBlobDataset",
+  "properties": {
+    "structure": [
+      {
+        "name": "Periods Ahead",
+        "type": "Int32"
+      },
+      {
+        "name": "Forecast From Date",
+        "type": "Datetime"
+      },
+      {
+        "name": "Sale Date",
+        "type": "Datetime"
+      },
+      {
+        "name": "Location",
+        "type": "String"
+      },
+      {
+        "name": "Product",
+        "type": "String"
+      },
+      {
+        "name": "Channel",
+        "type": "String"
+      },
+      {
+        "name": "Segment",
+        "type": "String"
+      },
+      {
+        "name": "Forecast",
+        "type": "Double"
+      },
+      {
+        "name": "CI LB",
+        "type": "Double"
+      },
+      {
+        "name": "CI UB",
+        "type": "Double"
+      },
+      {
+        "name": "Actual Sales",
+        "type": "Double"
+      },
+      {
+        "name": "sAPE",
+        "type": "Double"
+      },
+      {
+        "name": "qBar",
+        "type": "Double"
+      }
+    ],
+    "published": false,
+    "type": "AzureBlob",
+    "linkedServiceName": "demostorage_AzureStorageLinkedService",
+    "typeProperties": {
+      "fileName": "forecasts.csv",
+      "folderPath": "forecasts/{Year}/{Month}/{Day}",
+      "format": {
+        "type": "TextFormat",
+        "firstRowAsHeader": true
+      },
+      "partitionedBy": [
+        {
+          "name": "Year",
+          "value": {
+            "type": "DateTime",
+            "date": "SliceEnd",
+            "format": "yyyy"
+          }
+        },
+        {
+          "name": "Month",
+          "value": {
+            "type": "DateTime",
+            "date": "SliceEnd",
+            "format": "MM"
+          }
+        },
+        {
+          "name": "Day",
+          "value": {
+            "type": "DateTime",
+            "date": "SliceEnd",
+            "format": "dd"
+          }
+        }
+      ]
+    },
+    "availability": {
+      "frequency": "Week",
+      "interval": 1
+    }
+  }
+}

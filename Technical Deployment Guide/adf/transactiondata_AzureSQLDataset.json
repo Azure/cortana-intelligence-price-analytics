@@ -1,0 +1,17 @@
+﻿{
+  "name": "transactiondata_AzureSQLDataset",
+  "properties": {
+    "published": false,
+    "type": "AzureSqlTable",
+    "linkedServiceName": "demodb_AzureSqlLinkedService",
+    "typeProperties": {
+      "tableName": "pricingdata"
+    },
+    "availability": {
+      "frequency": "Week",
+      "interval": 1
+    },
+    "external": true,
+    "policy": { }
+  }
+}

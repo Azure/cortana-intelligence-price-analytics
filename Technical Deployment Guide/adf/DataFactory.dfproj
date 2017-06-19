@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>457a2b87-28df-4a28-b9e6-72d88fd7387b</ProjectGuid>
+    <OutputType>File</OutputType>
+    <AssemblyName>DataFactory</AssemblyName>
+    <ApiVersion>2015-08-01</ApiVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <Name>DataFactory</Name>
+    <RootNamespace>DataFactory</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ADFConfigFileToPublish>
+    </ADFConfigFileToPublish>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Dependencies\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Script Include="ConfigureServices_Pipeline.json" />
+    <Script Include="elasticities_AzureSQLDataset.json" />
+    <Script Include="etlBulkElasticities_AzureSQLDataset.json" />
+    <Script Include="etlBulkForecasts_AzureSQLDataset.json" />
+    <Script Include="forecasts_AzureSQLDataset.json" />
+    <Script Include="params_BulkForecasts_AzureBlobDataset.json" />
+    <Script Include="params_BulkElasticities_AzureBlobDataset.json" />
+    <Script Include="forecasts_AzureBlobDataset.json" />
+    <Script Include="cleaned_transactiondata_AzureBlobDataset.json" />
+    <Script Include="BuildModel_Log_Dataset.json" />
+    <Script Include="GetBulkForecasts_AzureMLLinkedService.json" />
+    <Script Include="GetBulkElasticities_AzureMLLinkedService.json" />
+    <Script Include="demostorage_AzureStorageLinkedService.json" />
+    <Script Include="demodb_AzureMLLinkedService.json" />
+    <Script Include="BuildModel_AzureMLLinkedService.json" />
+    <Script Include="Pricing_Pipeline.json" />
+    <Script Include="elasticities_AzureBlobDataset.json" />
+    <Script Include="transactiondata_AzureSQLDataset.json" />
+    <Script Include="solution_parameters_AzureSQLDataset.json" />
+  </ItemGroup>
+  <Import Project="$(AppData)\Microsoft\DataFactory Tools for Visual Studio\MsBuild\1.0\DataFactory.targets" />
+</Project>
