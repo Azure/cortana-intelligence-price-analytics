@@ -9,15 +9,14 @@ The Pricing Analytics Pre-Configured Solution (PCS) is an Azure Cloud solution c
 tools to help set prices for wholesale and retail products based on transaction records of past sales. 
 It is targeted at mid-size companies with small pricing teams who lack extensive data science support for 
 sophiticated pricing models.
-This document is aimed at the pricing or purchasing manager. It explains how to install the solution in your 
-Azure subscription, load your transaction data in it, and run
-the tools from your desktop using Excel, to generate pricings, e.g. for a monthly promotion, and predict
-the effect of these pricings on sales and revenue. 
 
-This document explains the pricing theory behind the tools, documents the solution architecture, and shows
-how to use and customize the solution. The [Technical Deployment Guide](Technical%20Deployment%20Guide.md) 
+This document explains how to install the solution in your Azure subscription, load your transaction data in it, 
+and run the tools from your desktop using Excel, to generate prices, e.g. for a monthly promotion, and predict
+the effect of these prices on sales and revenue. 
+
+This document also explains the pricing theory behind the tools, documents the solution architecture, and shows
+how to use the solution. The [Technical Deployment Guide](Technical%20Deployment%20Guide.md) 
 goes into more detail about how to integrate the solution with your cloud or on-premise data. 
-
 
 ## Automated Installation 
 
@@ -25,7 +24,6 @@ A "solution" refers to an assembly of Azure resources, such as predictive servic
 that consitute an application. There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/) that has a single-button install for this solution. 
 To deploy the solution, go to its [Cortana Intelligence web page](https://start.cortanaintelligence.com/Deployments/new/msr-pricing-class) and click Deploy.
 
-<div class="todo" style="color:red; font-weight: bold;">TODO: update the link with actual one and list manual steps</div>
 
 Assuming you've already set up an Azure subscription, this will place a copy of the resources there.
 Please follow the installation instructions for any manual steps needed.

@@ -17,12 +17,24 @@ warehouse.
 
 ## Introduction
 
+The Pricing Analytics Pre-Configured Solution (PCS) is an Azure Cloud solution consisting of a set of 
+tools to help set prices for wholesale and retail products based on transaction records of past sales. 
+It is targeted at mid-size companies with small pricing teams who lack extensive data science support 
+for sophisticated pricing models.
+
 Please understand how the solution is intended to be used in the [User Guide](UserGuide.md).
 
-**In what context is the offered pricing solution is suitable?**
-We recommend this solution for retail-like contexts where each customer segment 
-faces the same price. It is not appropriate when prices are often negotiated 
-individually. 
+### Suitable and unsuitable applications
+We recommend this solution for retail-like contexts where each customer segment faces the same posted price. 
+The customer id may or may not be known at the time of the sale. 
+The solution is unsuitable when the majority of transactions have prices negotiated individually.
+
+The accuracy of the models will be limited 
+* for new products with short time series
+* in scenarios where prices change due to anticipation of demand change by the seller
+  which is not predictable from the data. For example, a decline in demand for 
+  a device when a new version is about to be released (Osborne effect).
+  Seasonal variation seen in the data, on the other hand, is modeled, given sufficient history.
 
 ## Architecture
 
@@ -35,15 +47,14 @@ The solution architecture consists of the following Azure components:
 * An Azure SQL DB, used to store several different types of data, pre-process the transactional data for modeling,
   and generate pricing suggestions. A premium edition (P1) is recommended as the larger tables take advantage of clustered columnstore indices.
 * An Azure Storage account, used to save the model and intermediate data in Blobs and Tables.
-* A model build web service 
+* A model build web service, running in batch mode, 
 * A collection of several interactive services for querying the model
-* A PowerBI workspace collection
+* A PowerBI dashboard
 * Azure Data factory for scheduling regular execution
 
 Because every business system is different, the pre-configured solution does not include data 
 flows from your business system to the SQL database, or the flow of decisions pricing from 
-the analyst to the business systems (e.g. ERP).
-
+the analyst to the business systems (e.g. ERP). 
 An [integration partner](https://https://appsource.microsoft.com/en-us/product/cortana-intelligence/microsoft-cortana-intelligence.demand-forecasting-for-retail) 
 can connect these data paths for you.
 
@@ -58,17 +69,17 @@ The known limitations are:
   For example, if a grocery store raises prices mildly, customers will pay the higher price, rather than driving to another store. Demand is relatively inelastic.
   In the long run, customers may choose not to come to the more expensive store in the first place and demand will fall more.
 * While the model internally works with arbitrary periods, the solution has a weekly periodicity baked into 
-  how the data is aggregated in pre-processing the ADF pipeline
+  how the data is aggregated in pre-processing the ADF pipeline.
 * We don't check any business rules, such as "the pick-up channel must be prices the same or lower as the delivery channel"
-* Segmentation must be provided externally - we don't generate customer segments automatically
+* Segmentation must be provided externally - we don't yet generate customer segments automatically
 
 ## Automated Deployment Workflow
 
-To start, you will need an Azure subscription.
+To start, you will need an Azure subscription to which you have resource creation permissions.
+A free trial subscription is sufficient for learning and experimenting with the solution.
 
-Go to the [CIQS solution webpage](https://aka.ms/pricingciqs) and deploy the solution.
-* The name you give your solution becomes a name for the resource group for tracking your
-resources and spending. 
+First, go to the [CIQS solution webpage](https://aka.ms/pricingciqs) and deploy the solution.
+* The name you give your solution becomes a name for the resource group for tracking your resources and spending. 
 * Choose a location that is geographically to your business users.
 * Click Create
 
@@ -84,41 +95,79 @@ for the database administrator account. Remember this password well if you want 
 customize the solution. If you reset it in the [Azure portal](https://portal.azure.com),
 Azure Data Factory may have trouble talking to the SQL server.
 
-### Provisioned Resources
-Once the solution is deployed to the subscription, 
-you can see the services deployed by clicking the resource 
-group name on the final deployment screen in the CIS.
+### Provisioned Azure Resources
+Once the solution is deployed to the subscription, you can see the services deployed by clicking the resource 
+group name on the final deployment screen. 
+
+![Solution Resource group](../images/resource_group.png)
+
+The names of most of the resources will contain an illegible string (uniqueID) 
+that makes them uniquely identifiable (which helps if you have multiple deployments).
+Let us explain in detail the purpose of each Azure resource.
+
+
+#### The Power BI workspace ("epbi-uniqueID")
+The Power BI workspace is a container to host your Power BI dashboards in the cloud.
+It starts populated with the solution dashboard. Hosting your dashboards in a workspace
+enables embedding them in a Web App.
+
+#### The Function App ("functions-uniqueID")
+The Function App hosts Azure Functions, short tasks that are run after deployment, such as copying
+assets into the solution storage account, populating the database with the example dataset, and 
+retrieving credentials for display in the final deployment page.
+The website which embeds the PowerBI workshop for display in the browser 
+(<tt>pbijs</tt> and <tt>pbiweb</tt>) is also a "Function App".
+
+#### The Hosting Plan ("hostinguniqueID")
+The hosting plan is a scaling and billing layer for the web applications.
+
+#### The Machine Learning services ("planname_PE_Servicename")
+The several machine learning services are the core logic of the solution. 
+They generate the elasticity models and expose all of their aspects once they are created. 
+The services themselves are stateless but communicate with state written in the storage account.
+
+#### The Machine Learning Pricing Plan ("planname_plan")
+The pricing plan is how all the machine learning services get billed. 
+A new S1 pricing plan is created by default. All of the ML web services share this pricing plan.
+
+#### The SQL server ("plannamesrv")
+The SQL server hosts the SQL database. SQL servers are free in Azure, usage is billed at 
+database level, depending on the selected performance tier.
+
+#### The SQL database ("pricingdemo")
+The database is the main data interface between the solution and the surrounding computing
+environment, hosting all the structured datasets as tables. It also performs some bulk compute tasks,
+such as optimal price suggestion. A new S1 database is provisioned by default.
+
+#### The storage account (stguniqueID)
+The storage account acts most importantly as the storage layer for the pricing engine models.
+It also holds the weekly run outputs from the machine learning services.
+We provision a new LRS account and recommend that you turn the encryption on after deployment.
 
 ### One-time workbook setup
 
-<div class="todo" style="color:red; font-weight: bold;">
-TODO: rewrite this to reflect the possible configuration of SQL connection
-</div>
+Next, you will configure an Excel template for interacting with the solution. 
+Download the [template](https://aka.ms/pricingxls) and open it.
+It has multiple tabs, each corresponding to a task in pricing analysis.
 
-We provide an Excel template for interacting with the solution. 
-It has multiple tabs for the different steps in pricing analysis.
-Before the sheet can be used, it must be set up by connecting 
-the appropriate web services to the workbook.
+Before the sheet can be used, it must be set up by connecting the appropriate web services to the workbook.
 Please connect these services by pasting their request-response URL and into the AzureML plugin.
 The URLs and keys are displayed at the final CIQS page, which you can access
 from the [Deployments section of CIQS](https://start.cortanaintelligence.com/Deployments).
 You can also see all of your services [here](https://services.azureml.net).
 
-
 Detailed connection instructions are found in the worksheet, on the "Instructions" tab.
 After adding the services, save the Excel spreadsheet under an appropriate name; 
-we use <tt>AnalysisTemplate.xsls</tt>.
+we use <tt>AnalysisTemplate.xsls</tt> and share with users in your organization.
 This configured workbook template will be used to load data output from the analytical pipeline.
+
 
 ### Step-By-Step Visual Studio Deployment
 
 It is possible to deploy the elements of the solution with a few clicks 
-from their Visual Studio solution files, using Cloud Explorer.
-
-These instructions are currently not available because we are not ready to expose 
-the AzureML services source code externally for IP reasons. 
-Therefore the json for AzureML services is missing.
-This is not fully secure protection and needs to be resolved before going open source.
+from their Visual Studio solution files, using Cloud Explorer. This requires
+the full solution source code. If you are a Microsoft partner, please contact
+us to arrange access for customer deployments.
 
 ## Connecting Your Data
 
@@ -157,10 +206,9 @@ the following points.
 * SiteName, ChannelName, CustomerSegment also must be provided, if your data does not break down along these
   dimensions, use "All" or a similar constant as well.
 
-###	Outputs
+###	Output datasets
 
-These four SQL tables are the output tables of the solution. 
-You can expect them to be populated weekly.
+These four SQL tables are the output tables of the solution. You can expect them to be populated weekly.
 They underlie the Solution dashboard and can be used to create other visuals as well.
 
 * Elasticities
@@ -168,8 +216,22 @@ They underlie the Solution dashboard and can be used to create other visuals as 
 * Forecasts
 * SuggestionRuns
 
-Current run outputs are appended to these tables: Each has a RunDate column, corresponding to the date on which
-the data was inserted. The schemas are as follows:
+#### Common columns and conventions
+
+Current run outputs are appended to these tables.
+
+Each has a RunDate column, corresponding to the date on which the data was inserted. 
+The RelationValidDate column refers to the time for which the value of elasticity or demand was measured.
+For example, one might run the model on Jun 30, 2017 and obtain estimates for all times in the history.
+Then Rundate ='2017-06-30' and there will be a number of RelationValidDates, one for each historical periods.
+
+All tables have columns named Item, SiteName, ChannelName, and CustomerSegment, identifying
+the specific individually priced SKU for which the estimate or prediction is given.
+
+Where columns named &lt;Measure&gt;90LB and &lt;Measure&gt;90UB appear, this is the 90-percent confidence
+interval around the estimate.
+
+#### Elasticities dataset
 
 ```sql
 CREATE TABLE dbo.Elasticities (	
@@ -185,9 +247,8 @@ CREATE TABLE dbo.Elasticities (
 )
 ```
 
+#### Cross-Elasticities dataset
 The Cross-Elasticities table stores all the cross-elasticities that were estimated.
-RunDate doubles as an identifier of the model run.
-
 
 ```sql
 CREATE TABLE dbo.CrossElasticities (	
@@ -201,31 +262,91 @@ CREATE TABLE dbo.CrossElasticities (
   ImpactedSiteName      varchar(100) not null,
   ImpactedChannelName   varchar(100) not null,	   
   CrossElasticity       float not null,
-  CrossElasticity90LB   float not null,
-  CrossElasticity90UB   float not null,
 )
 ```
 
+There are two sets of items, prefixed with Driving and Impacted, since cross-elasticity
+is a directional relation. The measurement is in the CrossElasticity column.
+
+
+#### Forecasts dataset
 The Forecasts table stores all the forecasts the model has made.
 RunDate doubles as an identifier of the forecast run.
 
 ```sql
 CREATE TABLE dbo.Forecasts (	
-  RunDate               date not null,
+ RunDate               date not null,
+  Source				varchar(100) not null,	-- where did the forecast come from?
   Item                  varchar(100) not null,
   SiteName              varchar(100) not null,
-  ChannelName           varchar(100) not null,	
-  LastDayOfData         date not null,  -- forecast made using data up and including this
-  ForecastPeriodStart   date not null,  -- start of the period whose demand is forecasted
-  UnitPrice             float not null, -- forecast is conditional on this price  
-  Demand                float not null
-  Demand90LB            float not null
-  Demand90UB            float not null
+  ChannelName           varchar(100) not null,
+  CustomerSegment       varchar(100) not null,
+  LastDayOfData         date not null,  -- forecast made using data up and including this  
+  PeriodInDays			int not null,
+  PeriodsAhead			int not null,
+  ForecastPeriodStart	date not null,
+  ForecastPeriodEnd		date not null,  -- end of the period whose demand is forecasted
+  UnitPrice             float, -- forecast is conditional on this price. Should be decimal (6,2), but that's pulling the ADF tiger's tail.
+  Demand                float not null,
+  Demand90LB            float not null,
+  Demand90UB            float not null,
+  ActualSales			float null,
+  sAPE					float null,
+  qBar					float null
+  primary key (RunDate, Item, SiteName, ChannelName, 
+				LastDayOfData, ForecastPeriodStart, ForecastPeriodEnd)
 )
 ```
 
+LastDayOfData is the last day of data available at the time that this forecast is made.
+PeriodInDays makes it clear how many days there are in the forecast period.
+PeriodsAhead is how many periods ahead we are forecasting.
+ForecastPeriodStart and ForecastPeriodEnd denote the date range in which the predicted Demand is to be realized.
+The measurement is in the Demand column.
+If the forecast is made for a period in the past, the ActualSales are known, 
+and the Symmetrics Average Percentage Error (sAPE) is calculated.
+To put the sAPE in perspective, the qBar is a smoothed measure demand around the forecast period.
+
+#### Suggestions dataset
+
+The SuggestionRuns table stores the pricing suggestions made from
+the elasticities and forecasts. The suggestionRunID is an identifier
+referring to the date of model build from which the suggestion are created.
+
+The 
+
+```sql
+CREATE TABLE [dbo].[SuggestionRuns] (
+    [suggestionRunID]            VARCHAR (200) NOT NULL,
+    [pastPeriodStart]            DATE          NOT NULL,
+    [pastPeriodEnd]              DATE          NOT NULL,
+    [suggestionPeriodStart]      DATE          NOT NULL,
+    [suggestionPeriodEnd]        DATE          NOT NULL,
+    [minOrders]                  FLOAT (53)    NOT NULL,
+    [Item]                       VARCHAR (100) NOT NULL,
+    [SiteName]                   VARCHAR (100) NOT NULL,
+    [ChannelName]                VARCHAR (100) NOT NULL,
+    [CustomerSegment]            VARCHAR (100) NOT NULL,
+    [UnitsLastPeriod]            FLOAT (53)    NULL,
+    [avgSaleUnitPrice]           FLOAT (53)    NULL,
+    [avgCostUnitPrice]           FLOAT (53)    NULL,
+    [Orders]                     INT           NULL,
+    [RevenueLastPeriod]          FLOAT (53)    NULL,
+    [MarginLastPeriod]           FLOAT (53)    NULL,
+    [Elasticity]                 FLOAT (53)    NOT NULL,
+    [marginOptimalPrice]         FLOAT (53)    NULL,
+    [marginOptimalPriceRounded]  FLOAT (53)    NULL,
+    [percentChange]              FLOAT (53)    NULL,
+    [forecastedDemandAtOptimum]  FLOAT (53)    NULL,
+    [forecastedDemandAtRounded]  FLOAT (53)    NULL,
+    [forecastedRevenueAtRounded] FLOAT (53)    NULL,
+    [forecastedMarginAtRounded]  FLOAT (53)    NULL,
+    [incrementalMargin]          FLOAT (53)    NULL
+);
+```
+
 <div class="todo" style="color:red; font-weight: bold;">
-TODO: describe the SuggestionRuns table
+TODO: Describe the table columns
 </div>
 
 ## Configuration
@@ -249,14 +370,17 @@ TODO: describe the parameters table and check parameter names
 ## Building Applications
 
 While many users find the Excel environment natural, many will also require features
-that are not directly supported by our core models and pipelines.
+that are not directly supported by our core models and pipelines. BI Applications
+will necessitate ETL jobs sending the data to other applications.
 
-Whether you are building a customer-specific user interface in Excel or another application,
-you will want to call the web services. 
+First, we will address the case of integrating the services into an application.
+Whether you are building a customer-specific user interface in Excel or another application, 
+you will want to call the web services. We first give an detailing example of calling the 
+Elasticity web service from Excel and describe its inputs and outputs. 
+The other services operate analogously.
 
-We first give an detailing example of calling the Elasticity web service from Excel
-and describe its inputs and outputs. The other services operate analogously.
-
+Then we will describe the ADF pipeline and the datasets in the storage account;
+it should help you consume the output in custom BI applications.
 
 ### Elasticity service from Excel
 You can inspect the elasticities of every product by navigating to the "Elasticities" tab of the
@@ -315,14 +439,35 @@ The bulk services are used to export the data from the model to the database.
 * BulkCrossElasticities
 * BulkForecasts
 
+### Storage and ADF architecture
+
+<div class="todo" style="color:red; font-weight: bold;">
+TODO: describe the parameters table and check parameter names
+</div>
+
+- ADF pipeline
+- Datasets
+
 
 ## Troubleshooting
 
-* If you are experiencing timeouts on the BuildModel service, try increasing the
-  timeout period in the <tt>retrain_AzureML_Model</tt> ADF activity.
-* If you get "blob does not exist" errors, open the storage account and make sure
-  a model with the given datasetName exists. The name is case-sensitive.
+Most of the trouble we experienced has to do with needing to scale up.
+The solution is deployed at minimal performance and cost levels, and larger datasets may
+need to use higher tiers of the resources.
 
+#### "Blob does not exist" errors
+The blob name is crezted from the datasetName given in the spreadsheet.
+Open the storage account and make sure a model with the given datasetName exists. 
+The name is case-sensitive.
+The default datasetName used by ADF is latestModelBuild
+
+#### Timeouts on the BuildModel service
+Try increasing the timeout period in the <tt>retrain_AzureML_Model</tt> ADF activity.
+
+### Database or dashboard slow
+If you are experiencing performance issues with the database, try using a Premium database.
+Since the dashboard is direct-query, performance issues with the dashboard are often
+also database throughput issues.
 
 ## Support and feedback
 
