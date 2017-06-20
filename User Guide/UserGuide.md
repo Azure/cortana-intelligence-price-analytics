@@ -1,23 +1,22 @@
 # Pricing Analytics Pre-Configured Solution: Technical Guide
 
 This document is intended for the end user of the solution. It will guide you through
-the use of the solution in its default configuration. U
+the use of the solution in its default configuration. 
 
 ## Introduction
 
 The Pricing Analytics Pre-Configured Solution (PCS) is an Azure Cloud solution consisting of a set of 
 tools to help set prices for wholesale and retail products based on transaction records of past sales. 
 It is targeted at mid-size companies with small pricing teams who lack extensive data science support for 
-sophiticated
-pricing models.
+sophiticated pricing models.
 This document is aimed at the pricing or purchasing manager. It explains how to install the solution in your 
 Azure subscription, load your transaction data in it, and run
 the tools from your desktop using Excel, to generate pricings, e.g. for a monthly promotion, and predict
 the effect of these pricings on sales and revenue. 
 
 This document explains the pricing theory behind the tools, documents the solution architecture, and shows
-how to use and customize the solution. The [Implementor's Guide](../ImplementorsGuide.md) goes into more detail 
-about how to integrate the solution with your cloud or on-premise data. 
+how to use and customize the solution. The [Technical Deployment Guide](Technical%20Deployment%20Guide.md) 
+goes into more detail about how to integrate the solution with your cloud or on-premise data. 
 
 
 ## Automated Installation 
@@ -97,50 +96,6 @@ For example, suppose your marginal cost of oranges is $4 and you are selling the
 Then you should increase prices at lower elasticities (e > -5), and decrease them otherwise. 
 
 This PCS includes a model that computes an elasticity for each combination of (Item, Location, Channel).
-
-## Solution Architecture
-
-The architecture can be summarized in the following diagram:
-
-![architecture diagram](../images/pcsArchitectureDiagram.png)
-
-The solution architecture consists of the following Azure components:
-
-* An Azure SQL DB, used to store several different types of data, pre-process the transactional data for modeling,
-  and generate pricing suggestions.
-  A premium edition (P1) is recommended as the larger tables take advantage of clustered columnstore indices.
-* An Azure Storage account, used to save the model and intermediate data in Blobs and Tables.
-* A model build web service 
-* A collection of several interactive services for querying the model
-* A service for uploading the pricing decisions
-* A PowerBI workspace collection
-* Azure Data factory for scheduling regular execution
-
-The solution does not include data flows from your business system to the SQL database,
-or the flow of decisions pricing from the analyst to the business systems (e.g. ERP).
-An [integration partner](https://https://appsource.microsoft.com/en-us/product/cortana-intelligence/microsoft-cortana-intelligence.demand-forecasting-for-retail) 
-can connect these data paths for you.
-
-### Known limitations
-
-The pre-configured solution necessarily makes some simplifying assumptions.
-We will describe how to modify the solution in the PCS guide for implementors.
-
-The known limitations are:
-
-* We compute short-term elasticities only. In the short term, demand is less price-elastic than in the long term.
-  For example, if a grocery store raises prices mildly, customers will pay the higher price, rather than driving to another store. Demand is relatively inelastic.
-  In the long run, customers may choose not to come to the more expensive store in the first place and demand will fall more.
-* While the model internally works with arbitrary periods, the solution has a weekly periodicity baked into 
-  how the data is aggregated in pre-processing the ADF pipeline
-* We don't check any business rules, such as "the pick-up channel must be prices the same or lower as the delivery channel"
-
-Future improvements include:
-* Future pointer: we should just be able to query any grain against any grain, e.g. 
-  Peanut butter sold at City1 in person vs Jelly delivered from online store
-* We should just generate .xls files, rather than require the user to pull in data.
-* Create automatic customer segmentation algorithms
-
 
 ## Using the Pricing Engine (for the pricing analyst)
 

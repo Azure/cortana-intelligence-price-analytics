@@ -16,13 +16,9 @@ The solution has both visualization components (in Power BI) and interactive sim
 
 #### Estimated Provisioning time: 20 minutes
 
-Randomized controlled experiments are the gold standard for estimating causal effects like price elasticity of demand.
-Experimentation, also known as A/B testing, is extremely difficult to set up on existing operations systems. 
-Approaches using historical data are mostly “bolt-on”, but tools that guard against the many statistical pitfalls are essential.
-
-This solution brings such tools to any business with an Azure subscription. It alleviates confounding 
-by the "Double-ML" approach, which subtracts out the predictable components of price and demand variation 
-before estimating the elasticity. This immunizes the estimates from most forms of seasonal confounding.
+This solution brings price elasticity modeling and pricing recommendations to any business with an Azure subscription. 
+It alleviates confounding by the "Double-ML" approach, which subtracts out the predictable components
+of price and demand variation before estimating the elasticity. This immunizes the estimates from most forms of seasonal confounding.
 Additionally, the solution can be customized by an implementation partner to use data reflecting other 
 potential external demand drivers.
 
@@ -58,13 +54,17 @@ for a more detailed discussion.
 
 # Getting Started
 
-Start by clicking Deploy on this page. Instructions at the end of the deployment will guide you further.
+[Deploy the solution from the Cortana Intelligence Quick Start Page](https://aka.ms/pricingciqs).
+Instructions at the end of the deployment will guide you further.
+
+The solution deploys with an example data set of orange juice prices.
 
 While the solution is deploying, get a head start and 
 * peruse the [User Guide](User%20Guide/UserGuide.md) for a full set of usage instruction
 * download the [interactive Excel Worksheet](https://aka.ms/pricingxls)
 
-For technical problems or questions about deploying this solution, please post in the issues tab of the repository.
+For technical problems or questions about deploying this solution, 
+please post in the issues tab of the repository.
 
 # Solution Dashboard 
 
