@@ -282,19 +282,19 @@ CREATE TABLE dbo.Forecasts (
   ChannelName           varchar(100) not null,
   CustomerSegment       varchar(100) not null,
   LastDayOfData         date not null,  -- forecast made using data up and including this  
-  PeriodInDays			int not null,
-  PeriodsAhead			int not null,
-  ForecastPeriodStart	date not null,
-  ForecastPeriodEnd		date not null,  -- end of the period whose demand is forecasted
-  UnitPrice             float, -- forecast is conditional on this price. Should be decimal (6,2), but that's pulling the ADF tiger's tail.
+  PeriodInDays          int not null,
+  PeriodsAhead          int not null,
+  ForecastPeriodStart   date not null,
+  ForecastPeriodEnd     date not null,  -- end of the period whose demand is forecasted
+  UnitPrice             float,           -- forecast is conditional on this price. 
   Demand                float not null,
   Demand90LB            float not null,
   Demand90UB            float not null,
-  ActualSales			float null,
-  sAPE					float null,
-  qBar					float null
+  ActualSales           float null,
+  sAPE                  float null,
+  qBar                  float null
   primary key (RunDate, Item, SiteName, ChannelName, 
-				LastDayOfData, ForecastPeriodStart, ForecastPeriodEnd)
+                LastDayOfData, ForecastPeriodStart, ForecastPeriodEnd)
 )
 ```
 
@@ -310,10 +310,7 @@ To put the sAPE in perspective, the qBar is a smoothed measure demand around the
 #### Suggestions dataset
 
 The SuggestionRuns table stores the pricing suggestions made from
-the elasticities and forecasts. The suggestionRunID is an identifier
-referring to the date of model build from which the suggestion are created.
-
-The 
+the elasticities and forecasts. 
 
 ```sql
 CREATE TABLE [dbo].[SuggestionRuns] (
@@ -345,27 +342,70 @@ CREATE TABLE [dbo].[SuggestionRuns] (
 );
 ```
 
-<div class="todo" style="color:red; font-weight: bold;">
-TODO: Describe the table columns
-</div>
+The suggestionRunID is an identifier referring to the date of model 
+build from which the suggestion are created.
+
+<tt>PastPeriodStart</tt> and <tt>PastPeriodEnd</tt> describe the time interval for which
+the baseline numbers (Orders, Revenue, Margin) are taken (the "past period").
+<tt>SuggestionPeriodStar</tt> and <tt>SuggestionPeriodEnd</tt> describe the period for
+which the price is proposed (the "suggestion period").
+<tt>minOrders</tt> is the minimum number of orders that need to have occured
+for the item in the past period to be considered in the suggestion pipeline.
+
+Then we have the baseline numbers: <tt>UnitsLastPeriod</tt>, <tt>avgSaleUnitPrice</tt>,
+<tt>avgCostUnitPrice</tt>, <tt>RevenueLastPeriod</tt>, <tt>MarginLastPeriod</tt> 
+whose interpretations are hopefully clear. 
+<tt>Orders</tt> will be more than 1 only if disaggregated data are entered.
+
+<tt>Elasticity</tt> comes from the model estimatuon step, and the optimal prices
+follow from it and the marginal cost (avgCostUnitPrice). The exact price maximizing
+the gross profit margin is <tt>marginOptimalPrice</tt>, which is then rounded to
+"x.y9". The model predicts that it should be possible to make additional 
+<tt>incrementalMargin</tt> dollars over the suggestion period. 
 
 ## Configuration
 
 To set the parameters, update the table <tt>dbo.Parameters</tt> in the Solution's 
-SQL database. These parameters are configurable:
+SQL database, which stores simple key-value pairs:
 
-* Lead-time (days before start of pricing period) for producing the pricing suggestions. 
-  Insert the key-value pair ('sugLeadTime', '[n]') into the table, replacing [n] 
-  by the number of days in advance. The default value is '1'. 
-* Maximum allowed deviation of suggested price from current price (percentage).
-  Please insert the key-value pair ('maxPriceDeviation', '[x.x]') into the table, 
-  replacing [x.x] by the desired fraction. The default value is '0.2', representing
-  a maximum deviation of 20 percent.
+```sql 
+CREATE TABLE [dbo].[Parameters] (
+    [paramName] VARCHAR(50) NOT NULL, 
+    [paramValue] VARCHAR(MAX) NULL, 
+    PRIMARY KEY ([paramName]) 
+)
+```
 
-<div class="todo" style="color:red; font-weight: bold;">
-TODO: describe the parameters table and check parameter names
-</div>
+The bulk services are the only ML Services running in the ADF
+pipeline and therefore need configuration.
 
+### Recognized parameters for bulk services
+
+|Parameter (paramName) | Meaning | Default paramValue |
+|--|--|--|
+|BulkElasticities_DeltaX    | Elasticity for what change in price*?     | -0.1 |
+|BulkElasticities_WeekJump  | Retrieve elasticity for every n-th week   | 1 |
+|BulkForecasts_periodsAhead | Forecasts for many periods ahead?         | 1 |
+|BulkCrossPrice_WeekJump    |Retrieve elasticity for every n-th week    | 1 |
+
+### Adjusting suggestion lead times
+
+Today, you can adjust the lead times on suggestion by manipulating the date parameters 
+which Azure Data Factory passes to the <tt>spRecommendProducts</tt> stored procedure Activity
+(see ADF description below). If you would like multiple suggestion periods, please
+duplicate the stored procedure activity and call it with different parameters.
+
+```json
+"typeProperties": {
+    "storedProcedureName": "spRecommendProducts",
+    "storedProcedureParameters": {
+    "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)",
+    "lastDayOfData": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)",
+    "suggestionPeriodStart": "$$Text.Format('{0:yyyy-MM-dd}', Date.AddDays(SliceEnd,1))",
+    "suggestionPeriodEnd": "$$Text.Format('{0:yyyy-MM-dd}', Date.AddDays(SliceEnd,7))",
+    "minOrders": "1"
+}
+```
 
 ## Building Applications
 
@@ -420,13 +460,16 @@ The same information is reflected in the VIEW SCHEMA pane of the AzureML plugin.
 There are three types of ML service in this solution, batch model build, interactive retrieval 
 and bulk retrieval services. 
 
-The batch model build service is BuildModel and is responsible for all estimation tasks.
-Depending on data size, it can run minutes to hours.
+The batch model build service is BuildModel and is responsible for all estimation 
+and forecasting tasks. Depending on data size, it can run several minutes to hours.
 
 The interactive services are:
-* Elasticities
-* CrossElasticities
-* Forecasts
+* Elasticities - retrieve elasticities for one product at all sites, channels, and segments
+* CrossElasticities - retrieve cross-elasticities for all products and channels at one site. 
+                        The model assumes the same items at different sites don't compete.
+                        Perhaps more questionably, it also assumes that customer segmentation
+                        boundaries are not permeable.
+* Forecasts - retrieve forecasts at one site, assa specific pricing point
 * PromoSimulation
 * Outliers
 * RetrospectiveAnalysis
@@ -439,14 +482,30 @@ The bulk services are used to export the data from the model to the database.
 * BulkCrossElasticities
 * BulkForecasts
 
-### Storage and ADF architecture
+### Storage and ADF structure
+
+The Azure Data Factory has three Pipelines:
+- Configure Services Pipeline. This creates small datasets containing solution parameters.
+- Pricing  This is the large pipeline which 
+- * Prepares the data for modeling
+  * Runs the models
+  * Extracts forecasts and elasticities from the model
+  * Loads the model outputs into the database for visualization
+- Suggestions Pipeline creates pricing suggestions based on outputs of the Pricing pipeline.
 
 <div class="todo" style="color:red; font-weight: bold;">
-TODO: describe the parameters table and check parameter names
+TODO: describe activities in the pipelines
 </div>
 
-- ADF pipeline
-- Datasets
+The storage account has the following important folders:
+- crosselasticity - extracted from the model in Pricing Pipeline
+- elasticity - extracted from the model in Pricing Pipeline
+- experimentoutput - AzureML experiment internal cache
+- forecasts - extracted from the model in Pricing Pipeline
+- originaldata - cleaned, processed input data at start of Pricing Pipeline
+- pricing - contains the log files from model runs
+- serviceparameters - parameter datasets produced by the Configure Services pipeline
+
 
 
 ## Troubleshooting
@@ -459,7 +518,7 @@ need to use higher tiers of the resources.
 The blob name is crezted from the datasetName given in the spreadsheet.
 Open the storage account and make sure a model with the given datasetName exists. 
 The name is case-sensitive.
-The default datasetName used by ADF is latestModelBuild
+The default datasetName used by ADF is "latestDemoBuild".
 
 #### Timeouts on the BuildModel service
 Try increasing the timeout period in the <tt>retrain_AzureML_Model</tt> ADF activity.

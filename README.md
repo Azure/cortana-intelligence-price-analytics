@@ -37,7 +37,7 @@ This solution analyzes your prices and makes recommendations,
 
 All information is provided the fine level at which you need to control your price and inventory.
 
-More detailed description is available in our 
+Additional detail on the data science of prices are in our 
 [blog post](https://blogs.msdn.microsoft.com/intel/archives/1015).
 
 # Solution Architecture
