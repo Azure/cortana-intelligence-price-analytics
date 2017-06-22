@@ -29,7 +29,7 @@ Simply put, in absence of evidence, the model borrows information from other ite
 same items in other sites, and so on. As data in an item increases, its elasticity estimate will be
 fine-tuned more specifically.
 
-This solution analyzes your prices and makes recommendations, 
+This solution analyzes your prices and 
 * shows you in one glance how elastic your product demand is
 * provides pricing recommendations for every product in your item catalog
 * discovers related products (substitutes and complements

@@ -1,7 +1,18 @@
-# Pricing Analytics Pre-Configured Solution: Technical Guide
+# Pricing Analytics Pre-Configured Solution: User Guide
 
 This document is intended for the end user of the solution. It will guide you through
 the use of the solution in its default configuration. 
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Automated Installation](#automated-installation)
+3. [Economic Foundations](#economic-foundations)
+4. [Using the Pricing Engine](#using-the-pricing-engine)
+5. [Monitoring the Pricing Engine](#monitoring-the-pricing-engine)
+6. [Glossary](#glossary)
+7. [References](#references)
+
 
 ## Introduction
 
@@ -36,18 +47,11 @@ support applications on Azure for their clients' specific needs.
 
 ### One-time workbook setup
 
-<div class="todo" style="color:red; font-weight: bold;">
-TODO: rewrite this to reflect the possible configuration of SQL connection
-</div>
-
-We provide an Excel template named <tt>AnalysisTemplateUnconnected.xsls</tt> in the <tt>reports</tt> directory
-of your solution's storage account. It has multiple tabs for the different steps in pricing analysis.
+We provide an Excel template for interacting with the elasticity models. 
+It has multiple tabs for the different steps in pricing analysis.
 Before the sheet can be used, it must be set up by connecting the appropriate web services to the workbook.
 Please connect these services by going to https://services.azureml.net 
-and pasting the request-response URL into the AzureML plugin:
-
-* PromotionSimulation
-* Upload 
+and pasting the request-response URL into the AzureML plugin after clicking "Add".
 
 Detailed connection instructions are found in the worksheet, on the "Instructions" tab.
 After adding the services, save the Excel spreadsheet under an appropriate name; 
@@ -95,20 +99,10 @@ Then you should increase prices at lower elasticities (e > -5), and decrease the
 
 This PCS includes a model that computes an elasticity for each combination of (Item, Location, Channel).
 
-## Using the Pricing Engine (for the pricing analyst)
+## Using the Pricing Engine
 
 Once you've installed the Solution on Azure you work with it from a PowerBI Dashboard and 
 a set of Excel spreadsheets.
-
-You can see the solution dashboard by navigating to [powerbi.com](https://powerbi.com) 
-and finding the dashboard called PricingPCS. The contents of the dashboard is described below.
-<div class="todo" style="color:red; font-weight: bold"> 
-TODO does this require a manual step in the deployment (deploy dashboard)?
-</div>
-
-You can find the Excel workbook template in your solution storage account
-(refer to your [CIQS deployment](https://start.cortanaintelligence.com/Deployments) to find it), 
-in the <tt>workbooks</tt> directory.
 
 In this Section, we describe how the solution helps you
 * see your data
@@ -124,13 +118,13 @@ The solution dashboard contains two panes for descriptive analysis.
 The Time Series tab allows you to see the data in time, filtering down to products,
 sites, channel, segments and time periods.
 * Actual sales time series, filterable by category hierarchy, site, and channel
-![Time series tab](./dashboard_time_series.png)
+![Time series tab](../images/dashboard_time_series.png)
 
 The DemandVsPrice tab shows the simplest possible (and inaccurate) method of estimating price elasticity.
 We plot demand versus price and obtain downward sloping lines expressing how demand decreases with
 increasing price. Again, the full complement of filters is available.
 
-![Demand vs Price tab](./dashboard_demand_vs_price.png)
+![Demand vs Price tab](../images/dashboard_demand_vs_price.png)
 
 ### Building a model from data
 
@@ -148,7 +142,7 @@ The solution allows you to build a model without a full integration from the Exc
 You need to prepare your data in the same format as the OJ data given as an example.
 Please follow this schema:
 
-![Pricing Engine Data Schema](./002_Schema.png) {style="width:400px"}
+![Pricing Engine Data Schema](../images/002_Schema.png){style="width:400px"}
 
 Navigate to the AzureML plugin and find the service with "BuildModel" in its name.
 (If you don't have a BuildModel service connected, please connect the service per the Instructions tab of the workbook).
@@ -157,7 +151,7 @@ Now, select all of your data, including headers, and click “Predict as Batch” in
 On OJ data, this will take about 3 minutes to output the products, locations and date ranges the engine recognizes. 
 The output should look like this.
 
-![Build Model Worksheet](./004_PE_BuildModel.png)
+![Build Model Worksheet](../images/004_PE_BuildModel.png)
 
 We named our model OJ_Demo. You can build models from many datasets, 
 just give them different names to avoid overwriting any models you want to keep around.
@@ -174,7 +168,7 @@ For each item whose price you decide to change, you enter the new price.
 When done, you use the Upload service to let the system know to start tracking the impact
 of the price change. Here is the workflow in a picture.
 
-![Price Setting Workflow](./PriceSettingWorkflow.png)
+![Price Setting Workflow](../images/PriceSettingWorkflow.png)
 
 * review overpriced/underpriced items report and suggested prices 
 * visualize the demand curves
@@ -182,46 +176,9 @@ of the price change. Here is the workflow in a picture.
 * simulate the effect of changing prices for individual products on revenue and margin
 * record the setting of the new prices
 
-#### Pricing Suggestion Report
+#### Pricing Suggestions
 
-This report is a processed output from the elasticity model. 
-An elasticity value is estimated for each combination of (Item, Location, Channel, CustomerSegment) 
-and combined with marginal cost data to suggest a price that is theoretically optimal in the short term (maximizes gross margin).
-
-The data for the report is in a file <tt> reports/yy/mm/dd/suggestion.csv </tt> where yy,mm,dd refer to the date that the report is produced.
-The user should load the data into the "PricingSuggestion" tab of the provided <tt>AnalysisTemplate.xlsx</tt> workbook and save it under an appropriate name.
-
-It has the following columns:
-
-* Identification of pricing unit
-  * Item
-  * Location
-  * Channel
-* Review of sales activity
-  * Last period quantity
-  * Last period revenue
-* Review of pricing data
-  * Historical Min, Max and Median prices
-  * Last Offered Price
-  * Last Known Marginal Cost
-* Suggested Price
-* Predictions
-  * Predicted sales at current price
-  * Predicted sales at suggested price
-  * Predicted margin at suggested price
-* Customer Feedback 
-  * Price that will be set
-  * Notes
-
-
-![Pricing Report](./PricingReportHeader.png)
-
-The customer feedback column is used to indicate to the system that the suggestion
-was accepted, and what price was set. This price can be different from the suggested price
-for a variety of reasons. The note will be carried through to analysis and provides means
-to break down the suggestions. For example, one might use the notes "Flyer Promo" and "In-Store Deal"
-to later see these two types of promotions in the analytical charts.
-
+Pricing suggestions are directly exposed in the solution dashboard.
 
 #### Review elasticities 
 
@@ -231,7 +188,7 @@ The basis for pricing prediction is the elasticity value for each product.
 The easiest way of seeing the estimated elasticities is to look at the solution dashboard,
 the Elasticities tab.
 
-![Dashboard Elasticities tab](./dashboard_elasticities.png)
+![Dashboard Elasticities tab](../images/dashboard_elasticities.png)
 
 On this tab you can see the distributions of elasticities. For example, you can see that
 Tropicana juice (red) is the least elastic. The distribution of estimated Tropicana elasticities
@@ -251,7 +208,7 @@ You can also query the elasticities using the Excel service GetElasticities.
 With this service, you can query the latest model build (use "latestModelBuild" for datasetName).
 Because elasticities can change in time, a query date is required in cell A6 of the spreadsheet.
 
-![Elasticity Input parameter](./ElasticityInputParameter.png)
+![Elasticity Input parameter](../images/ElasticityInputParameter.png)
 
 The output consists of a dataframe containing the estimated elasticity of every Item at every
 Site, as well as the 90% confidence interval for the estimate. The range of elasticities can
@@ -274,7 +231,7 @@ forecast should be made using elasticity valid around that time. Marginal cost i
 needed to calculate the gross margin.
 
 The curve is visualized in the linked picture provided in the last column:
-![DemandCurve](./demandCurve.png)
+![DemandCurve](../images/demandCurve.png)
 
 The blue curve is the estimated revenue, the green curve is the gross margin (GM).
 In this particular illustration, the GM optimal point is all the way out at the top
@@ -294,10 +251,7 @@ demand for peanut butter if you lower the price of jelly by 1%.
 When deciding on the price of a product, the purpose of finding the related products
 is to select which other products to include in the "promotion simulation" step.
 
-The cross-elasticities can be seen on the solution dashboard, the Cross Effects tab.
-<div class="todo" style="color:red; font-weight: bold"> 
-TODO: add dashboard when we upload the cross-elasticity data
-</div>
+The cross-elasticities can be seen on the solution dashboard's Related Products tab.
 
 In Excel, you use the cross-price elasticity service similarly to the elasticity service,
 specifying a date, and location at which to look for cross-price effects.
@@ -308,7 +262,7 @@ The strongest effect we see is Minute Maid on Dominicks, meaning that lowering
 the price of Minute Maid eats into sales of Dominicks, whereas the converse effect
 is weaker.
 
-![Cross-elasticties](./cpElasticity.png) {style="width: 400px"}
+![Cross-elasticties](../images/cpElasticity.png) {style="width: 400px"}
 
 We currently assume there is no effect across sites and channels.
 
@@ -319,7 +273,7 @@ to review the predicted effect of a price change, comprehensively across product
 This interactive feature is available only in Excel because it requires the user to 
 input a hypothetical promotional scenario (entering data is awkward in PowerBI).
 
-![Promotion Simulation in Excel](./012_PromoSim.png)
+![Promotion Simulation in Excel](../images/012_PromoSim.png)
 
 In this simulation, we are at the end of week of 1/14 and we look at the predicted effect 
 of setting the price  of Minute Maid to $1.75 for two weeks (beginning at the week of 1/28)
@@ -330,31 +284,6 @@ Note how the seasonal trend in Tropicana demand is bent down by the promotion in
 as people substitute to the brand on sale.
 
 This analysis lets you look at the effect of a promotion more holistically.
-
-
-#### Uploading the decisions
-
-Once you have determined what the new price of each product should be, 
-note your decision in the Pricing Suggestion Report tab, in the New Price column
-and examine the next price. 
-
-After all products new prices and notes are entered, the user navigates to the "Upload" pane of the AML plugin.
-Select the range of cells in the Pricing Suggestion Report and ensure that the correct model is referred 
-to in the "datasetName" field.
-Set the output to a place where the response will not overwrite important data, then hit the "Predict as Batch" 
-in the Upload pane. The output will indicate whether your prices passed validation rules, and contain error
-messages if they were not. Please address the error message and try again.
-
-As a result of this process, the Pricing Engine will note the new prices for tracking - but will not set 
-the prices in your system of record. Those products that have the "New Price" left blank will not be tracked as part 
-of the promotion identified by this "SuggestionRunID".
-
-### Workflow: Review impact of promotion
-
-After promotions have been run, we naturally want to know how much we made.
-<div class="todo" style="color:red; font-weight: bold"> 
-TODO: Populate and describe the dashboard tab for Promotion Impact
-</div>
 
 Each promotion run has a SuggestionRunID, which identifies a promotion.
 
@@ -371,7 +300,7 @@ the accuracy you are accustomed to is not fluctuating.
 At-a-glance view of the model performance is available in the "Model Diagnostics"
 dahsboard tab.
 
-![Dashboard Model Diagnostics Tab](./dashboard_model_diagnostics.png)
+![Dashboard Model Diagnostics Tab](../images/dashboard_model_diagnostics.png)
 
 There are two sections, the Elasticity model and the Forecast model diagnostics.
 
@@ -401,13 +330,15 @@ ounterfactual is visualized as trend line.
 ## Glossary
 
 * Item: The SKU being sold. We may refer to it as ItemKey when it is not obvious whether we are talking
-        about a SKU or SKU being sold at a place, time, and method. 
+        about a product in general (say, identified by a UPC code) or a product being sold at a place, 
+        time, and method. 
 * Site: A store or a warehouse where the demand is fulfilled.
 * Channel: Sales channel, for instance In-Store sales vs Internet shipping order. Prices may differ by channel.
-* Customer Segment: (is distinct from Channel, but may be correlated, or usage of the sales channel may be
-                  a means of price discrimination). Another typical segmentation might be on "UsedCouponX",
-                  with prices differing for different coupon type.
+* Customer Segment: is distinct from Channel, but may be correlated, or usage of the sales channel may be
+                  a means of price discrimination. A typical segmentation might be on "UsedCouponX",
+                  with prices differing for different coupon types.
 
 ## References
 
-* [Blog post on an early version of the Pricing Engine](https://blogs.msdn.microsoft.com/intel/archives/1015)
+1. [Blog post on an early version of the Pricing Engine](https://blogs.msdn.microsoft.com/intel/archives/1015)
+2. [Wikipedia: Price Elasticity of Demand](https://en.wikipedia.org/wiki/Price_elasticity_of_demand)]
