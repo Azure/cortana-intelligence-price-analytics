@@ -55,7 +55,7 @@ The solution architecture consists of the following Azure components:
 Because every business system is different, the pre-configured solution does not include data 
 flows from your business system to the SQL database, or the flow of decisions pricing from 
 the analyst to the business systems (e.g. ERP). 
-An [integration partner](https://https://appsource.microsoft.com/en-us/product/cortana-intelligence/microsoft-cortana-intelligence.demand-forecasting-for-retail) 
+An [integration partner](https://appsource.microsoft.com/en-us/product/cortana-intelligence/microsoft-cortana-intelligence.demand-forecasting-for-retail) 
 can connect these data paths for you.
 
 ### Known limitations
