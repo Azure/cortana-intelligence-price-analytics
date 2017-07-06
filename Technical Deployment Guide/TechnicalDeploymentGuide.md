@@ -1,6 +1,6 @@
-# Pricing Analytics Solution: Technical Deployment Guide
+# Interactive Pricing Analytics Solution: Technical Deployment Guide
 
-This document explains how to deploy the default configuration of the Pricing Analytics Solution.
+This document explains how to deploy the default configuration of the Interactive Pricing Analytics Solution.
 It is intended for technical personnel who deploy the solution and connect it to the business data
 warehouse.
 
@@ -17,10 +17,11 @@ warehouse.
 
 ## Introduction
 
-The Pricing Analytics Pre-Configured Solution (PCS) is an Azure Cloud solution consisting of a set of 
-tools to help set prices for wholesale and retail products based on transaction records of past sales. 
-It is targeted at mid-size companies with small pricing teams who lack extensive data science support 
-for sophisticated pricing models.
+The Pricing Analytics Pre-Configured Solution (PCS) consists of a set of tools 
+to help set prices for wholesale and retail products based on transaction records of past sales. 
+It is made up of Azure cloud and Office components.
+The solution targets mid-size companies with small pricing teams who lack extensive data science
+support for complex pricing models and data flows.
 
 Please understand how the solution is intended to be used in the [User Guide](UserGuide.md).
 
@@ -44,13 +45,13 @@ The architecture can be summarized in the following diagram:
 
 The solution architecture consists of the following Azure components:
 
-* An Azure SQL DB, used to store several different types of data, pre-process the transactional data for modeling,
+* **Azure SQL DB**, used to store several different types of data, pre-process the transactional data for modeling,
   and generate pricing suggestions. A premium edition (P1) is recommended as the larger tables take advantage of clustered columnstore indices.
-* An Azure Storage account, used to save the model and intermediate data in Blobs and Tables.
-* A model build web service, running in batch mode, 
-* A collection of several interactive services for querying the model
-* A PowerBI dashboard
-* Azure Data factory for scheduling regular execution
+* **Azure Storage** account, used to save the model and intermediate data in **Blobs**.
+* A model build ***AzureML web service**, running in batch mode, 
+* A collection of several interactive **Azure ML services** for querying the model
+* A **PowerBI dashboard**, hosted in a **Azure Web App**
+* **Azure Data Factory** for scheduling regular execution
 
 Because every business system is different, the pre-configured solution does not include data 
 flows from your business system to the SQL database, or the flow of decisions pricing from 
