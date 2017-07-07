@@ -23,19 +23,12 @@ It is made up of Azure cloud and Office components.
 The solution targets mid-size companies with small pricing teams who lack extensive data science
 support for complex pricing models and data flows.
 
-Please understand how the solution is intended to be used in the [User Guide](UserGuide.md).
+The [User Guide](UserGuide.md) will help you understand how the solution is intended to be used.
 
 ### Suitable and unsuitable applications
 We recommend this solution for retail-like contexts where each customer segment faces the same posted price. 
 The customer id may or may not be known at the time of the sale. 
 The solution is unsuitable when the majority of transactions have prices negotiated individually.
-
-The accuracy of the models will be limited 
-* for new products with short time series
-* in scenarios where prices change due to anticipation of demand change by the seller
-  which is not predictable from the data. For example, a decline in demand for 
-  a device when a new version is about to be released (Osborne effect).
-  Seasonal variation seen in the data, on the other hand, is modeled, given sufficient history.
 
 ## Architecture
 
@@ -48,7 +41,7 @@ The solution architecture consists of the following Azure components:
 * **Azure SQL DB**, used to store several different types of data, pre-process the transactional data for modeling,
   and generate pricing suggestions. A premium edition (P1) is recommended as the larger tables take advantage of clustered columnstore indices.
 * **Azure Storage** account, used to save the model and intermediate data in **Blobs**.
-* A model build ***AzureML web service**, running in batch mode, 
+* A model build **AzureML web service**, running in batch mode, 
 * A collection of several interactive **Azure ML services** for querying the model
 * A **PowerBI dashboard**, hosted in a **Azure Web App**
 * **Azure Data Factory** for scheduling regular execution
@@ -64,15 +57,27 @@ can connect these data paths for you.
 The pre-configured solution necessarily makes some simplifying assumptions.
 We will describe how to modify the solution below.
 
-The known limitations are:
+Some of the functional limitations are:
 
 * We compute short-term elasticities only. In the short term, demand is less price-elastic than in the long term.
   For example, if a grocery store raises prices mildly, customers will pay the higher price, rather than driving to another store. Demand is relatively inelastic.
   In the long run, customers may choose not to come to the more expensive store in the first place and demand will fall more.
 * While the model internally works with arbitrary periods, the solution has a weekly periodicity baked into 
   how the data is aggregated in pre-processing the ADF pipeline.
+* The ADF pipeline works with one dataset only. To use with multiple datasets, we recommend you duplicate
+  the solution. It will be more cost efficient, but more work to configure, to duplicate and re-configure 
+  just the ADF activities and not the services or databases. 
 * We don't check any business rules, such as "the pick-up channel must be prices the same or lower as the delivery channel"
 * Segmentation must be provided externally - we don't yet generate customer segments automatically
+
+The accuracy of the models will be limited
+
+* for new products with short time series,
+* in scenarios where prices change due to anticipation of demand change by the seller
+  which is not predictable from the data. For example, a decline in demand for 
+  a device when a new version is about to be released (Osborne effect).
+  Seasonal variation seen in the data, on the other hand, is modeled, given sufficient history.
+
 
 ## Automated Deployment Workflow
 
@@ -93,8 +98,9 @@ The deployment goes through several provisioning and setup steps, using a combin
 
 You will need to interact with the installer once, to create a user name and pasword
 for the database administrator account. Remember this password well if you want to
-customize the solution. If you reset it in the [Azure portal](https://portal.azure.com),
-Azure Data Factory may have trouble talking to the SQL server.
+customize the solution. If you reset it (e.g., in the [Azure portal](https://portal.azure.com)),
+Azure Data Factory will have trouble talking to the SQL server and the Linked Services
+will need an updated connection string with the new password.
 
 ### Provisioned Azure Resources
 Once the solution is deployed to the subscription, you can see the services deployed by clicking the resource 
@@ -104,34 +110,34 @@ group name on the final deployment screen.
 
 The names of most of the resources will contain an illegible string (uniqueID) 
 that makes them uniquely identifiable (which helps if you have multiple deployments).
+Please read [names in brackets] as variables.
 Let us explain in detail the purpose of each Azure resource.
 
-
-#### The Power BI workspace ("epbi-uniqueID")
+#### The Power BI workspace ("epbi-[uniqueID]")
 The Power BI workspace is a container to host your Power BI dashboards in the cloud.
 It starts populated with the solution dashboard. Hosting your dashboards in a workspace
 enables embedding them in a Web App.
 
-#### The Function App ("functions-uniqueID")
+#### The Function App ("functions-[uniqueID]")
 The Function App hosts Azure Functions, short tasks that are run after deployment, such as copying
 assets into the solution storage account, populating the database with the example dataset, and 
 retrieving credentials for display in the final deployment page.
 The website which embeds the PowerBI workshop for display in the browser 
 (<tt>pbijs</tt> and <tt>pbiweb</tt>) is also a "Function App".
 
-#### The Hosting Plan ("hostinguniqueID")
+#### The Hosting Plan ("hosting[uniqueID]")
 The hosting plan is a scaling and billing layer for the web applications.
 
-#### The Machine Learning services ("planname_PE_Servicename")
+#### The Machine Learning services ("[planname]_PE_[Servicename]")
 The several machine learning services are the core logic of the solution. 
 They generate the elasticity models and expose all of their aspects once they are created. 
 The services themselves are stateless but communicate with state written in the storage account.
 
-#### The Machine Learning Pricing Plan ("planname_plan")
+#### The Machine Learning Pricing Plan ("[planname]_plan")
 The pricing plan is how all the machine learning services get billed. 
 A new S1 pricing plan is created by default. All of the ML web services share this pricing plan.
 
-#### The SQL server ("plannamesrv")
+#### The SQL server ("[planname]srv")
 The SQL server hosts the SQL database. SQL servers are free in Azure, usage is billed at 
 database level, depending on the selected performance tier.
 
@@ -140,18 +146,19 @@ The database is the main data interface between the solution and the surrounding
 environment, hosting all the structured datasets as tables. It also performs some bulk compute tasks,
 such as optimal price suggestion. A new S1 database is provisioned by default.
 
-#### The storage account (stguniqueID)
+#### The storage account (stg[uniqueID])
 The storage account acts most importantly as the storage layer for the pricing engine models.
 It also holds the weekly run outputs from the machine learning services.
 We provision a new LRS account and recommend that you turn the encryption on after deployment.
 
 ### One-time workbook setup
 
-Next, you will configure an Excel template for interacting with the solution. 
-Download the [template](https://aka.ms/pricingxls) and open it.
+After the solution is deployed, you will get a basic graphical overview in the dashboard.
+To get numeric outputs, you will need configure an Excel template for interacting with the solution. 
+Download the [template](https://aka.ms/pricingxls) and open it. 
 It has multiple tabs, each corresponding to a task in pricing analysis.
 
-Before the sheet can be used, it must be set up by connecting the appropriate web services to the workbook.
+The configuration means connecting the appropriate web services to the workbook.
 Please connect these services by pasting their request-response URL and into the AzureML plugin.
 The URLs and keys are displayed at the final CIQS page, which you can access
 from the [Deployments section of CIQS](https://start.cortanaintelligence.com/Deployments).
@@ -162,16 +169,17 @@ After adding the services, save the Excel spreadsheet under an appropriate name;
 we use <tt>AnalysisTemplate.xsls</tt> and share with users in your organization.
 This configured workbook template will be used to load data output from the analytical pipeline.
 
-
 ### Step-By-Step Visual Studio Deployment
 
 It is possible to deploy the elements of the solution with a few clicks 
-from their Visual Studio solution files, using Cloud Explorer. This requires
-the full solution source code. If you are a Microsoft partner, please contact
-us to arrange access for customer deployments.
+from their Visual Studio solution files, using Cloud Explorer. 
+The advantage of this method is that you have source control of any modification you are making to the solution,
+and is appropriate for developers and integrators. It requires the full solution source code
+If you are a Microsoft partner, please contact us to arrange access for customer deployments.
 
 ## Connecting Your Data
 
+Analytics is only useful to you if it runs on your data.
 This section describes the inputs and output datasets of the solution.
 
 ###	Input dataset
@@ -194,13 +202,13 @@ CREATE TABLE dbo.pricingdata (
 )
 ```
 
-The solution defines the data as an external ADF dataset, which means the data should "just appear" in this table. 
-It is your responsibility to ensure that it does. We recommend that you use Azure Data Factory or SSIS to push 
-sales data incrementally from the business data warehouse to this table. While transforming data, please consider
-the following points.
+The solution defines the data as an external ADF dataset, which means the data is expected to "just appear" in this table. 
+It is the integrator's responsibility to ensure that it does. 
+We recommend that you use Azure Data Factory or SSIS to push sales data incrementally from the business data warehouse to this table. 
+While transforming data, please consider the following points.
 
 * Data can be aggregated weekly or left in the original one-row-per-transaction state, in which case the system will be aggregate it to weekly quantities.
-* If you aggregate the transactions, we recommend against defining the price as a weekly average of prices.
+* If you aggregate the transactions, we recommend *against* defining the price as a weekly average of prices.
   Instead, we recommend you group by distinct discrete prices if possible.
 * ItemHierarchy must be provided as a comma-separated list of categories, highest level first, for example "Cosmetics, Soap, Coconut Soap".
    If your items are not organized in a product hierarchy, use a single string like "Products".
@@ -423,30 +431,38 @@ The other services operate analogously.
 Then we will describe the ADF pipeline and the datasets in the storage account;
 it should help you consume the output in custom BI applications.
 
-### Elasticity service from Excel
-You can inspect the elasticities of every product by navigating to the "Elasticities" tab of the
-Promotion Suggestion report and opening the "Elasticity" service pane of the AzureML plugin.
+For customizing the AzureML services, please contact us directly.
 
-![AzureML plugin pane for Elasticity Service](../images/ElasticityAzureMLplugin.png) {style = "width: 300px"}
+### Excel Example: Elasticity Service
+
+You can inspect the elasticities of every product by navigating to the "Elasticities" tab 
+of the Excel template nd opening the "Elasticity" service pane of the AzureML plugin.
+
+![AzureML plugin pane for Elasticity Service](../images/ElasticityAzureMLplugin.png){style="width: 300px"}
 
 Because elasticities can change in time, a query date is required in cell A6 of the spreadsheet.
-We recommend using the date of the most recent model. The A5:A6 range of cells is the input.
+We recommend using the date of the most recent model. The A5:A6 range of cells is the input to the service.
 
 ![Elasticity Input parameter](../images/ElasticityInputParameter.png)
 
-The output location should be set to a convenient location in the spreadsheet, normally Elasticities$A20.
-The "datasetName" parameter is of the form "M<date>", where data refers to the day on which the model
+The output location should be set to a convenient location in the spreadsheet, e.g. Elasticities$A20.
+The "datasetName" parameter is 'latestModelBuild', where data refers to the day on which the model
 was created, using data available up to that day. You can explore previous models as well
-[Future pointer: we should offer the "list models" feature and if model isn't listed, use latest]
 
 The output consists of a dataframe containing the estimated elasticity of every Item at every
 Site, as well as the 90% confidence interval for the estimate. The range of elasticities can
 be seen in one glance by clicking on the generated external figure link containing the elasticity histogram.
 
-![Elasticity histogram](../images/elasticityHistogram.png)
+![Elasticity histogram](../images/elasticityHistogram.png){style="width:400px"}
+
+To build customer analyses in Excel, you can use the output values in Excel calculations just like any value.
+Look in the Promotion Simulation tab for a simple example of building a dynamically updated chart
+from the output values.
 
 To get the service to behave as if it was a first-order Excel function and update
 values in its output cells every time the input changes, check the Auto-predict box.
+
+
 
 ### Calling REST APIs from anywhere
 
@@ -464,41 +480,50 @@ and bulk retrieval services.
 The batch model build service is BuildModel and is responsible for all estimation 
 and forecasting tasks. Depending on data size, it can run several minutes to hours.
 
-The interactive services are:
+The **interactive** services are:
 * Elasticities - retrieve elasticities for one product at all sites, channels, and segments
 * CrossElasticities - retrieve cross-elasticities for all products and channels at one site. 
                         The model assumes the same items at different sites don't compete.
                         Perhaps more questionably, it also assumes that customer segmentation
                         boundaries are not permeable.
-* Forecasts - retrieve forecasts at one site, assa specific pricing point
-* PromoSimulation
-* Outliers
-* RetrospectiveAnalysis
+* Forecasts - retrieve forecasts at one site, at a specific pricing point
+* PromoSimulation - simulate a promotional scenario
+* Outliers - identify the items which had large forecast failures
+* RetrospectiveAnalysis - assists 
 
+The service names may have have a PE_ prefix (for "Pricing Engine").
 These services are expected to return within a few seconds (the first query after a while may be slow
-as the containers "warm up").
+as the containers "warm up"). All services have usage instructions in the template spreadsheet.
 
-The bulk services are used to export the data from the model to the database.
-* BulkElasticities
-* BulkCrossElasticities
-* BulkForecasts
+The **bulk services** are used to export the data from the model to the database.
+They output large amounts of data. In the solution, they are called in batch mode
+and their output stored in the database after output in the storage account.
+Each service produces one dataset.
 
-### Storage and ADF structure
+* BulkElasticities - get all estimated elasticities, outputs to the <tt>elasticity</tt> container
+* BulkCrossElasticities - get all estimated elasticities, outputs to the <tt>crosselasticity</tt> container
+* BulkForecasts - get all estimated elasticities, outputs to the <tt>forecasts</tt> container
+
+### ADF structure
 
 The Azure Data Factory has three Pipelines:
-- Configure Services Pipeline. This creates small datasets containing solution parameters.
-- Pricing  This is the large pipeline which 
+
+- **Configure Services Pipeline** creates small datasets containing solution parameters.
+- **Pricing Pipeline** This is the large modeling pipeline which 
 - * Prepares the data for modeling
   * Runs the models
   * Extracts forecasts and elasticities from the model
   * Loads the model outputs into the database for visualization
-- Suggestions Pipeline creates pricing suggestions based on outputs of the Pricing pipeline.
+- **Suggestions Pipeline** creates pricing suggestions based on outputs of the Pricing pipeline.
 
-<div class="todo" style="color:red; font-weight: bold;">
-TODO: describe activities in the pipelines
-</div>
+You can view your pipelines in the Azure portal.
+
+![Azure Data Factory](../images/pricingDataFactory.jpeg)
+
+### Storage account structure
 
 The storage account has the following important folders:
+
 - crosselasticity - extracted from the model in Pricing Pipeline
 - elasticity - extracted from the model in Pricing Pipeline
 - experimentoutput - AzureML experiment internal cache
@@ -506,7 +531,6 @@ The storage account has the following important folders:
 - originaldata - cleaned, processed input data at start of Pricing Pipeline
 - pricing - contains the log files from model runs
 - serviceparameters - parameter datasets produced by the Configure Services pipeline
-
 
 
 ## Troubleshooting
@@ -528,6 +552,10 @@ Try increasing the timeout period in the <tt>retrain_AzureML_Model</tt> ADF acti
 If you are experiencing performance issues with the database, try using a Premium database.
 Since the dashboard is direct-query, performance issues with the dashboard are often
 also database throughput issues.
+
+## FAQ
+
+This section will be updated with common questions we get from implementing parties.
 
 ## Support and feedback
 
