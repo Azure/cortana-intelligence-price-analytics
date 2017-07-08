@@ -23,7 +23,9 @@ It is made up of Azure cloud and Office components.
 The solution targets mid-size companies with small pricing teams who lack extensive data science
 support for complex pricing models and data flows.
 
-The [User Guide](UserGuide.md) will help you understand how the solution is intended to be used.
+This document explain technical details of the solution architecture, configuration and customization.
+The accompanying [User Guide](../User%20Guide/UserGuide.md) will help you understand the economic
+model and how the solution is intended to be used.
 
 ### Suitable and unsuitable applications
 We recommend this solution for retail-like contexts where each customer segment faces the same posted price. 
@@ -540,7 +542,7 @@ The solution is deployed at minimal performance and cost levels, and larger data
 need to use higher tiers of the resources.
 
 #### "Blob does not exist" errors
-The blob name is crezted from the datasetName given in the spreadsheet.
+The blob name is created from the datasetName given in the spreadsheet.
 Open the storage account and make sure a model with the given datasetName exists. 
 The name is case-sensitive.
 The default datasetName used by ADF is "latestDemoBuild".

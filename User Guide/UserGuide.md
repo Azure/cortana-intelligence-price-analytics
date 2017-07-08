@@ -1,4 +1,4 @@
-# Pricing Analytics Pre-Configured Solution: User Guide
+# Interactive Pricing Analytics Pre-Configured Solution: User Guide
 
 This document is intended for the end user of the solution. It will guide you through
 the use of the solution in its default configuration. 
@@ -16,39 +16,39 @@ the use of the solution in its default configuration.
 
 ## Introduction
 
-The Pricing Analytics Pre-Configured Solution (PCS) is an Azure Cloud solution consisting of a set of 
-tools to help set prices for wholesale and retail products based on transaction records of past sales. 
-It is targeted at mid-size companies with small pricing teams who lack extensive data science support for 
-sophiticated pricing models.
+The Interactive Pricing Analytics Pre-Configured Solution (PCS) is an Azure cloud application providing 
+a set of tools to help set prices for wholesale and retail products based on transaction records of past sales. 
+It is targeted at mid-size companies with small pricing teams who lack extensive data science support 
+for bespoke pricing analytics models.
 
 This document explains how to install the solution in your Azure subscription, load your transaction data in it, 
 and run the tools from your desktop using Excel, to generate prices, e.g. for a monthly promotion, and predict
 the effect of these prices on sales and revenue. 
 
 This document also explains the pricing theory behind the tools, documents the solution architecture, and shows
-how to use the solution. The [Technical Deployment Guide](Technical%20Deployment%20Guide.md) 
+how to use the solution. The accompanying [Technical Deployment Guide](../Technical%20Deployment%20Guide/TechnicalDeploymentGuide.md) 
 goes into more detail about how to integrate the solution with your cloud or on-premise data. 
 
 ## Automated Installation 
 
-A "solution" refers to an assembly of Azure resources, such as predictive services, cloud storage an so on, 
-that consitute an application. There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/) that has a single-button install for this solution. 
+A "solution" refers to an assembly of Azure resources, such as predictive services, cloud storage and
+scheduled data pipelines, that consitute an application. 
+There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/) that has a single-button install for this solution. 
 To deploy the solution, go to its [Cortana Intelligence web page](https://start.cortanaintelligence.com/Deployments/new/msr-pricing-class) and click Deploy.
 
-
 Assuming you've already set up an Azure subscription, this will place a copy of the resources there.
-Please follow the installation instructions for any manual steps needed.
+Please follow the installation instructions for the one manual step needed (set up username and password for database).
 Take note of the final page of the CIQS deployment, listing names of resources deployed. 
 It will help you find resources like "the storage account". 
 The final deployment page is always available in your [CIQS deployments](https://start.cortanaintelligence.com/Deployments).
 
-In addition, System Integrators and ISVs will be able to customize the PCS to build specific pricing decision 
-support applications on Azure for their clients' specific needs. 
+Our partner System Integrators and ISVs will be able to customize 
+the PCS to build specific pricing decision support applications on Azure for their clients' specific needs. 
 
 ### One-time workbook setup
 
-We provide an Excel template for interacting with the elasticity models. 
-It has multiple tabs for the different steps in pricing analysis.
+We provide an Excel application template for interacting with the elasticity models. 
+It has multiple tabs, one for each of the different steps in pricing analysis.
 Before the sheet can be used, it must be set up by connecting the appropriate web services to the workbook.
 Please connect these services by going to https://services.azureml.net 
 and pasting the request-response URL into the AzureML plugin after clicking "Add".
@@ -81,34 +81,55 @@ Observational approaches do not require infrastructural changes, but tools that 
 
 The pricing solution implements an advanced observational approach to factor out the effect of known confounding factors.
 
-### Core concept: Elasticity
+### Core concepts: Self-Elasticity and margin-optimal price
 
 The core concept is that of price elasticity of demand, a measure of how sensitive the aggregate demand is to price.
 
-Informally, self-price elasticity is the percentage "lift" in sales of a product if we put it on a 1% discount.librar
-Most consumer products have elasticities in the range of 1.5-5. 
+**Self-price elasticity** is the percentage "lift" in sales of a product if we put it on a 1% discount.
+Most consumer products have elasticities in the range of 1.5-5. In the chart below, the product has an elasticity
+of -2 in this small 
+
+![Price Elasticity Graph](../images/001_Elasticity.gif){style="width:400px"}
+
 Products with more competitors are easier to substitute away from and will have higher elasticity. 
 Discretionary products are more elastic than staples.
 
-The above condition holds if you are optimizing only revenue, which is the case if you have negligible marginal cost 
-(e.g. you sell electronic media). More frequently, you have substantial marginal costs, 
-and want to optimize your gross margin (price - marginal cost). 
-Then the constant -1 in the above calculation is replaced by (Price)/(Gross Margin), also known as the inverse Lerner Index. 
-For example, suppose your marginal cost of oranges is $4 and you are selling them for $5. 
-Then you should increase prices at lower elasticities (e > -5), and decrease them otherwise. 
+Elasticity (consumer response to price) varies 
 
-This PCS includes a model that computes an elasticity for each combination of (Item, Location, Channel).
+* product to product
+* current price point 
+* time
+* sales channel
+* location
+* customer segments and 
+* other considerations. 
+
+This PCS includes a model that computes an elasticity for each combination  of 
+(Item, Location, Channel, Segment, Week). 
+
+**Optimal price** is any price that optimizes some business objective. The most natural business objective
+is gross margin, the difference (Price - Marginal Cost). Suppose you sell products with negligible marginal cost,
+(e.g. electronic media). Then you should lower or raise prices until you reach elasticity of -1. 
+At elasticity -1 you are in equilibrium: you lose a dollar worth of sales quantity every time 
+you raise prices enough to make a dollar from the higher price and your gross margin stays the same.
+
+More frequently, you have substantial marginal costs (cost to make one more piece or acquire it from the supplier).
+Then the constant -1 in the above calculation is replaced by - (Price)/(Gross Margin), 
+also known as the *inverse Lerner Index*. 
+For example, suppose your marginal cost of oranges is $4 and you are selling them for $5, making your
+gross margin $1. Your inverse lerner index is -5 and you should increase prices at lower elasticities (e > -5), 
+and decrease them otherwise. 
+
 
 ## Using the Pricing Engine
 
 Once you've installed the Solution on Azure you work with it from a PowerBI Dashboard and 
 a set of Excel spreadsheets.
 
-In this Section, we describe how the solution helps you
-* see your data
-* build pricing models on schedule or interactively
-* review pricing recommendations and set prices
-* view promotion impacts in terms of additional sales and margins
+In this section, we use worfklow-based examples describe how the solution helps you see your data, 
+build pricing models on schedule or interactively, identify related products, 
+review pricing recommendations, and view promotion impacts in terms of additional 
+sales and margins.
 
 ### Seeing your data
 
@@ -126,26 +147,31 @@ increasing price. Again, the full complement of filters is available.
 
 ![Demand vs Price tab](../images/dashboard_demand_vs_price.png)
 
-### Building a model from data
+### Building an elasticity model from data
 
-First, we need to build a model from transactional data.
+First, we need to build a model from transactional data. You can either use the pre-built example
+or input your own data in provided [the spreadsheet](https://aka.ms/pricingxls). Please download
+the spreadsheet.
 
-Out-of-the-box, the solution database is pre-populated with the demonstration dataset (Orange Juice) 
-with dates shifted to create a realistic appearance of data coming in weekly. 
+**Pre-built model.** Out-of-the-box, the solution database is pre-populated with the demonstration dataset 
+(Orange Juice) with dates shifted to create a realistic appearance of data coming in weekly. 
 The pre-configured model is automatically re-built weekly from the current data.
+
+You will therefore have a model called 'latestDemoBuild' available out of the box.
 
 When the implementor connects the solution to your business data warehouse, data updates 
 per that ETL job (whether it is [SSIS](https://docs.microsoft.com/en-us/sql/integration-services/sql-server-integration-services), 
 [ADF](https://azure.microsoft.com/en-us/services/data-factory/) or some other method).
 
-The solution allows you to build a model without a full integration from the Excel workbook.
+**Use your data.** The solution allows you to build a model without a full integration from the Excel workbook.
 You need to prepare your data in the same format as the OJ data given as an example.
 Please follow this schema:
 
-![Pricing Engine Data Schema](../images/002_Schema.png){style="width:400px"}
+![Pricing Engine Data Schema](../images/003_SchemaExample.png)
 
 Navigate to the AzureML plugin and find the service with "BuildModel" in its name.
-(If you don't have a BuildModel service connected, please connect the service per the Instructions tab of the workbook).
+(If you don't have a BuildModel service connected, please connect the service 
+ per the Instructions tab of the workbook).
 
 Now, select all of your data, including headers, and click “Predict as Batch” in the AzureML plugin window. 
 On OJ data, this will take about 3 minutes to output the products, locations and date ranges the engine recognizes. 
@@ -156,17 +182,12 @@ The output should look like this.
 We named our model OJ_Demo. You can build models from many datasets, 
 just give them different names to avoid overwriting any models you want to keep around.
 
-### Workflow: Price Review and Setting
+### Workflow 1: Price Review and Setting
 
 Now that our model is built, we get to the main function of the solution, 
 which is to enable a pricing manager to optimize prices offered.
-The wokflow starts with the Pricing Suggestion worksheet. 
-Every row in the worksheet is a pricing suggestion. 
-You review all the items on that report, checking the PowerBi dashboard 
-or interrogating the model through Excel if you need more detail on that item.
-For each item whose price you decide to change, you enter the new price.
-When done, you use the Upload service to let the system know to start tracking the impact
-of the price change. Here is the workflow in a picture.
+The wokflow starts with revieving the Pricing Suggestion dashboard tab.
+You pick suggestions from the dashboard, analyze them individually, and set new prices.
 
 ![Price Setting Workflow](../images/PriceSettingWorkflow.png)
 
@@ -174,11 +195,34 @@ of the price change. Here is the workflow in a picture.
 * visualize the demand curves
 * review elasticities and cross-products effects: substitute and complementary products
 * simulate the effect of changing prices for individual products on revenue and margin
-* record the setting of the new prices
+* set the new prices in your ERP
 
 #### Pricing Suggestions
 
-Pricing suggestions are directly exposed in the solution dashboard.
+Pricing suggestions are directly exposed in the solution dashboard. Please navigate to the
+Pricing Suggestions tabs in the solution dashboard and filter down to the specific item
+and location. 
+
+RunDates are used to keep track of the weekly model runs and monitor the performance over time.
+For analysis, always make sure to select the latest available RunDate in the filter
+to get the freshest information. 
+
+The right side of the Pricing Suggestion tab contains charts ordered by the incremental
+margin opportunity. If you click on site 130 (highest opportunity) in the example data, 
+the dashboard filters down and tells you the largest margin improvement opportunity 
+is in the Minute Maid juice ($189k). It currently sells for $1.26, massively below cost
+of $1.84. It seems like the store is running a promotion on the juice and losing money on it. 
+The system proposes to sell it at $2.29 and forecasts demand of 17,159 units at that price.
+
+![Suggestions](../images/015_RecommendedPrices.png)
+
+Dominick's juice is currently sold at $0.99, the marginal cost is $1.25, 
+and the suggested price is $1.69. At the suggested price, we predict 
+the sales would reach 2,386 units.
+
+(Please note that marginal costs in the example data are fictitious and serve to illustrate
+the margin calculations. They are not provided in the original OJ dataset.)
+
 
 #### Review elasticities 
 
