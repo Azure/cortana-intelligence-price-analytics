@@ -153,10 +153,10 @@ First, we need to build a model from transactional data. You can either use the 
 or input your own data in provided [the spreadsheet](https://aka.ms/pricingxls). Please download
 the spreadsheet.
 
-**Pre-built model.** Out-of-the-box, the solution database is pre-populated with the demonstration dataset 
-(Orange Juice) with dates shifted to create a realistic appearance of data coming in weekly. 
+**Pre-built model.** The solution database is pre-populated with a demonstration dataset 
+([Orange Juice](https://www.rdocumentation.org/packages/bayesm/versions/3.0-2/topics/orangeJuice)) 
+with dates shifted to create an appearance of data coming in weekly. 
 The pre-configured model is automatically re-built weekly from the current data.
-
 You will therefore have a model called 'latestDemoBuild' available out of the box.
 
 When the implementor connects the solution to your business data warehouse, data updates 
@@ -247,6 +247,8 @@ elasticity of Tropicana and lower ones for Minute Maid and Dominick's hold.
 Note we have filtered down to only the elasticities estimated in the latest model run (Sunday May 28th).
 Each model run estimated elasticities from the entire history up to and including the model run date.
 With long histories, models tend to be stable: if you click through the model runs, the results are very similar. 
+
+#### Optional: Acessing elasticities from Excel
 
 You can also query the elasticities using the Excel service GetElasticities.
 With this service, you can query the latest model build (use "latestModelBuild" for datasetName).
@@ -385,4 +387,4 @@ ounterfactual is visualized as trend line.
 ## References
 
 1. [Blog post on an early version of the Pricing Engine](https://blogs.msdn.microsoft.com/intel/archives/1015)
-2. [Wikipedia: Price Elasticity of Demand](https://en.wikipedia.org/wiki/Price_elasticity_of_demand)]
+2. [Wikipedia: Price Elasticity of Demand](https://en.wikipedia.org/wiki/Price_elasticity_of_demand)

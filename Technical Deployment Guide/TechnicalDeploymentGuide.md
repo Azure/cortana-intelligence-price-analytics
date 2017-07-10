@@ -43,8 +43,9 @@ The solution architecture consists of the following Azure components:
 * **Azure SQL DB**, used to store several different types of data, pre-process the transactional data for modeling,
   and generate pricing suggestions. A premium edition (P1) is recommended as the larger tables take advantage of clustered columnstore indices.
 * **Azure Storage** account, used to save the model and intermediate data in **Blobs**.
-* A model build **AzureML web service**, running in batch mode, 
-* A collection of several interactive **Azure ML services** for querying the model
+* A model build **AzureML web service**, running in batch mode. 
+* A collection of several interactive **Azure ML services** for querying the model. All services are created
+  by turning the pricing engine python package into a web service on the AzureML platform.
 * A **PowerBI dashboard**, hosted in a **Azure Web App**
 * **Azure Data Factory** for scheduling regular execution
 

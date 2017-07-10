@@ -29,9 +29,13 @@ If you closed that page, you can come back to it from the
 In the spreadsheet, find the Simulate Promotion tab. It has a yellow box with instructions.
 You have already completed the first step of those instructions (set up web service).
 
-Follow the instructions, but choose A18 as the destination cell. 
+Follow the instructions in the spreadsheet, but choose A18 as the destination (output) cell. 
 As <tt>datasetName</tt> parameter of the service, you can use 'latestDemoBuild'
 if the solution has run for a while and a model has been generated.
+For forecastPeriod, choose 3. 
+
+If the table at A18 fills out successfully, then your model has already been built by Azure Data Factory. 
+If you get an error, please build a model according to the instructions in the next section.
 
 Experiment with the price of Minute Maid on week 2. Note that both the sales
 of tropicana and dominicks are affected the same week (cannibalization)
