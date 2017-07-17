@@ -1,5 +1,6 @@
 # Pricing Analytics
 
+
 # Summary
 
 The Pricing Analytics solution uses your transactional history data to show you how the demand 
