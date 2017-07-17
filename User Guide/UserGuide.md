@@ -1,3 +1,4 @@
+
 # Interactive Pricing Analytics Pre-Configured Solution: User Guide
 
 This document is intended for the end user of the solution. It will guide you through
@@ -173,7 +174,7 @@ Navigate to the AzureML plugin and find the service with "BuildModel" in its nam
 (If you don't have a BuildModel service connected, please connect the service 
  per the Instructions tab of the workbook).
 
-Now, select all of your data, including headers, and click “Predict as Batch” in the AzureML plugin window. 
+Now, select all of your data, including headers, and click Â“Predict as BatchÂ” in the AzureML plugin window. 
 On OJ data, this will take about 3 minutes to output the products, locations and date ranges the engine recognizes. 
 The output should look like this.
 
