@@ -1,3 +1,4 @@
+
 # Interactive Pricing Analytics Solution: Technical Deployment Guide
 
 This document explains how to deploy the default configuration of the Interactive Pricing Analytics Solution.
