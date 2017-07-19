@@ -126,7 +126,7 @@ and decrease them otherwise.
 Once you've installed the Solution on Azure you work with it from a PowerBI Dashboard and 
 a set of Excel spreadsheets.
 
-In this section, we use worfklow-based examples describe how the solution helps you see your data, 
+In this section, workflow-based examples describe how the solution helps you see your data, 
 build pricing models on schedule or interactively, identify related products, 
 review pricing recommendations, and view promotion impacts in terms of additional 
 sales and margins.
@@ -150,7 +150,7 @@ increasing price. Again, the full complement of filters is available.
 ### Building an elasticity model from data
 
 First, we need to build a model from transactional data. You can either use the pre-built example
-or input your own data in provided [the spreadsheet](https://aka.ms/pricingxls). Please download
+or input your own data in [the provided spreadsheet](https://aka.ms/pricingxls). Please download
 the spreadsheet.
 
 **Pre-built model.** The solution database is pre-populated with a demonstration dataset 
@@ -186,7 +186,7 @@ just give them different names to avoid overwriting any models you want to keep 
 
 Now that our model is built, we get to the main function of the solution, 
 which is to enable a pricing manager to optimize prices offered.
-The wokflow starts with revieving the Pricing Suggestion dashboard tab.
+The workflow starts with reviewing the Pricing Suggestion dashboard tab.
 You pick suggestions from the dashboard, analyze them individually, and set new prices.
 
 ![Price Setting Workflow](../images/PriceSettingWorkflow.png)
@@ -271,9 +271,9 @@ You invoke the DemandCurve AzureML service from the Demand Curve tab of the spre
 
 The service gives you the estimated quantity and gross margin of a single product 
 sold over a range of price points for the product. 
-The inputs identifying the product are are Location, Product, Channel, Segment.
+The inputs identifying the product are Location, Product, Channel, Segment.
 Date and Marginal Cost are also inputs; Date identifies at which point in time the 
-forecast should be made using elasticity valid around that time. Marginal cost is
+forecast should be made, using elasticity estimate around that time. Marginal cost is
 needed to calculate the gross margin.
 
 The curve is visualized in the linked picture provided in the last column:
@@ -285,7 +285,7 @@ end of the considered range. Note that the current price at this date is much lo
 typical for Minute Maid ($2.39) and the model is pushing for a higher price.
 
 The Excel tabular output lets you see the predicted number more precisely 
-and use the them in your Excel calculations.
+and use them in your Excel calculations.
 
 #### Cross-price elasticities
 
@@ -344,7 +344,7 @@ These solution features are intended to expose model perfomance metrics and ensu
 the accuracy you are accustomed to is not fluctuating.
 
 At-a-glance view of the model performance is available in the "Model Diagnostics"
-dahsboard tab.
+dashboard tab.
 
 ![Dashboard Model Diagnostics Tab](../images/dashboard_model_diagnostics.png)
 
@@ -369,9 +369,9 @@ standard deviations these forecasts were off.
 
 ### Retrospective Analysis
 
-This service displays the failed forecasts on a time axis to allows you to see if forecast 
+This service displays the failed forecasts on a time axis to allow you to see if forecast 
 failure for individual outliers might be related to exceptional demand events.
-ounterfactual is visualized as trend line.
+The counterfactual is visualized as trend line.
 
 ## Glossary
 
