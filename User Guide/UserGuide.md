@@ -32,7 +32,7 @@ goes into more detail about how to integrate the solution with your cloud or on-
 ## Automated Installation 
 
 A "solution" refers to an assembly of Azure resources, such as predictive services, cloud storage and
-scheduled data pipelines, that consitute an application. 
+scheduled data pipelines, that constitute an application. 
 There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/) that has a single-button install for this solution. 
 To deploy the solution, go to its [Cortana Intelligence web page](https://start.cortanaintelligence.com/Deployments/new/msr-pricing-class) and click Deploy.
 
@@ -86,10 +86,10 @@ The pricing solution implements an advanced observational approach to factor out
 The core concept is that of price elasticity of demand, a measure of how sensitive the aggregate demand is to price.
 
 **Self-price elasticity** is the percentage "lift" in sales of a product if we put it on a 1% discount.
-Most consumer products have elasticities in the range of 1.5-5. In the chart below, the product has an elasticity
-of -2 in this small 
+Most consumer products have elasticities in the range of 1.5-5. 
+In the chart below, the product has an elasticity of -2 in this small range of prices.
 
-![Price Elasticity Graph](../images/001_Elasticity.gif){style="width:400px"}
+![Price Elasticity Graph](../images/016_ElasticityCurve.png){style="width:600px"}
 
 Products with more competitors are easier to substitute away from and will have higher elasticity. 
 Discretionary products are more elastic than staples.
