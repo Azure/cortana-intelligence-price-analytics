@@ -2,15 +2,16 @@
 
 # Summary
 
-The Pricing Analytics solution uses your transactional history data to show you how the demand 
-for your products responds to the prices you offer, to recommend pricing changes, and allow 
-you to simulate how changes in price would affect your demand, at a fine granularity.
+This solution on Pricing Analytics uses your sales history transactional data to show you how the demand 
+for your products responds to the prices you offer. This way you can recommend pricing changes, and  
+ simulate how changes in price would affect your demand, at the level of individual products.
 
-It estimates price elasticities for every product, site, channel and customer segment
-in your business. The models avoid most common confounding effects using an advanced modeling 
+The core of the solution is the ability to
+ estimate price elasticities for every product, site, channel and customer segment
+in your business. These elasticity models avoid most common confounding effects by using an advanced modeling 
 approach combining the strengths of machine learning and econometrics.
 
-The solution has both visualization components (in Power BI) and interactive simulation components (in Excel).
+The solution has visualization components both in Power BI and for interactive simulation, in Excel.
 
 # Description
 
@@ -24,28 +25,32 @@ potential external demand drivers.
 
 Additionally, estimating demand for item, sites, and channels with sparse demand is a challenge
 and pricing solutions often only give estimates at product category level. Our pricing solution
-uses "hierarchical regularization" to produce consistent estimates in such data-poor situations. 
-Simply put, in absence of evidence, the model borrows information from other items in the same category, 
-same items in other sites, and so on. As data in an item increases, its elasticity estimate will be
+uses "hierarchical regularization" to produce consistent estimates down to the product level in such data-poor situations. 
+Simply put, in absence of strong evidence, the model borrows information from other items in the same category, 
+same items in other sites, and so on. As data for an item increases, its elasticity estimate will be
 fine-tuned more specifically.
 
 This solution analyzes your prices and 
-* shows you in one glance how elastic your product demand is
-* provides pricing recommendations for every product in your item catalog
-* discovers related products (substitutes and complements
+
+* shows you in one glance how elastic your product demand is,
+* provides pricing recommendations for every product in your item catalog,
+* discovers related products (substitutes and complements),
 * lets you simulate promotional scenarios.
 
-All information is provided the fine level at which you need to control your price and inventory.
+All information is provided at the level at which you need for detailed control of your price and inventory.
 
 Additional detail on the data science of prices are in our 
 [blog post](https://blogs.msdn.microsoft.com/intel/archives/1015).
 
 # Solution Architecture
 
-The solution uses a SQL server to store your transactional data and the generated model predictions.
-There are more than 10 elasticity modeling core services, which are authored in AzureML using Python core libraries.
-Azure Data Factory schedules weekly model refreshes. The results display in a PowerBI dashboard.
-The provided Excel spreadsheet consumes the predictive Web Services.
+Azure Solutions are composed of cloud-based analytics tools for data ingestion, data storage, scheduling and advanced analytics components in a way that can be integrated with your current production systems. This Solution combines these Azure services:
+
+* A SQL server to store your transactional data and the generated model predictions.
+* Azure Data Factory, which schedules weekly model refreshes. 
+* There are more than 10 elasticity modeling core services, which are exposed by AzureML.
+* The provided Excel spreadsheets run the predictive Web Services.
+* The results display in a PowerBI dashboard.
 
 ![Solution Architecture](images/pcsArchitectureDiagram.png)
 
