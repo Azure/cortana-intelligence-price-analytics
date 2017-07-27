@@ -19,19 +19,20 @@ warehouse.
 
 The Pricing Analytics Pre-Configured Solution (PCS) consists of a set of tools 
 to help set prices for wholesale and retail products based on transaction records of past sales. 
-It is made up of Azure Cloud and Office components.
+It is made up of Azure Cloud and Microsoft Office components.
 The solution targets mid-size companies with small pricing teams who lack extensive data science
 support for complex pricing models and data flows.
 
 This document explain technical details of the solution architecture, configuration and customization.
 The accompanying [User Guide](../User%20Guide/UserGuide.md) will help you understand the economic
-model and how the solution is intended to be used.
+model and how the solution is intended to be used. We will describe how to modify the solution below.
+
 
 ### Suitable and unsuitable applications
 
-We recommend this solution for retail-like contexts where each customer segment faces the same posted price. 
-The customer id may or may not be known at the time of the sale. 
-The solution is unsuitable when the majority of transactions have prices negotiated individually.
+We recommend this solution where each customer segment faces the same posted price,typical of retail businesses. The data necessary doesn't need to track the 
+customer identity.  
+Conversely, the solution is unsuitable when the majority of transactions have prices negotiated for individual customers.
 
 ## Architecture
 
@@ -41,44 +42,46 @@ The architecture can be summarized in the following diagram:
 
 The solution architecture consists of the following Azure components:
 
-* **Azure SQL DB**, used to store several different types of data, pre-process the transactional data for modeling,
+* **Azure SQL DB**, used to store several different types of data, pre-process 
+  the transactional data for modeling,
   and generate pricing suggestions. A premium edition (P1) is recommended as the larger tables take advantage of clustered columnstore indices.
-* **Azure Storage** account, used to save the model and intermediate data in **Blobs**.
-* A model build **AzureML web service**, running in batch mode. 
-* A collection of several interactive **Azure ML services** for querying the model. All services are created
+* **Azure Storage** account, used to save the model and intermediate data 
+  in **Blobs**.
+* An **AzureML web service** for building models, running in batch mode. 
+* A collection of several interactive **Azure ML services** for querying 
+  the model. All services are created
   by turning the pricing engine package into a web service on the AzureML platform.
 * A **PowerBI dashboard**, hosted in a **Azure Web App**
 * **Azure Data Factory** for scheduling regular execution
 
 Because every business system is different, the pre-configured solution does not include data 
-flows from your business system to the SQL database, or the flow of decisions pricing from 
-the analyst to the business systems (e.g. ERP). 
+flows from your business system to the SQL database, or the flow of pricing decisions back to 
+business systems (e.g. ERP). 
 An [integration partner](https://appsource.microsoft.com/en-us/product/cortana-intelligence/microsoft-cortana-intelligence.demand-forecasting-for-retail) 
 can connect these data paths for you.
 
 ### Known limitations
 
 The pre-configured solution necessarily makes some simplifying assumptions.
-We will describe how to modify the solution below.
 
 Some of the functional limitations are:
 
 * We compute short-term elasticities only. In the short term, demand is less price-elastic than in the long term.
-  For example, if a grocery store raises prices mildly, customers will pay the higher price, rather than driving to another store. Demand is relatively inelastic.
-  In the long run, customers may choose not to come to the more expensive store in the first place and demand will fall more.
+  For example, if a grocery store raises prices, customers will pay the higher price if the increment is small, rather than driving to another store: short term demand is relatively inelastic.
+  But in the long run, customers may choose not to come to the more expensive store in the first place and demand will fall more.
 * While the model internally works with arbitrary periods, the solution has a weekly periodicity baked into 
   how the data is aggregated in pre-processing the ADF pipeline.
 * The ADF pipeline works with one dataset only. To use with multiple datasets, we recommend you duplicate
-  the solution. It will be more cost efficient, but more work to configure, to duplicate and re-configure 
+  the solution. It will be more cost efficient, but more work to configure to duplicate and re-configure 
   just the ADF activities and not the services or databases. 
 * We don't check any business rules, such as "the pick-up channel must be prices the same or lower as the delivery channel"
-* Segmentation must be provided externally - we don't yet generate customer segments automatically
+* Segmentation must be provided externally - we don't yet generate customer segments automatically.
 
-The accuracy of the models will be limited
+In these cases the accuracy of the models will be limited:
 
-* for new products with short time series,
+* for the introduction of new products with little or no sales history,
 * in scenarios where prices change due to anticipation of demand change by the seller
-  which is not predictable from the data. For example, a decline in demand for 
+  that is not predictable from the data. For example, a decline in demand for 
   a device when a new version is about to be released (Osborne effect).
   Seasonal variation seen in the data, on the other hand, is modeled, given sufficient history.
 
@@ -88,10 +91,11 @@ The accuracy of the models will be limited
 To start, you will need an Azure subscription to which you have resource creation permissions.
 A free trial subscription is sufficient for learning and experimenting with the solution.
 
-First, go to the [CIQS solution webpage](https://aka.ms/pricingciqs) and deploy the solution.
+To install the solution in your subscription, 
+first go to the [CIQS solution webpage](https://aka.ms/pricingciqs) and deploy the solution.
 * The name you give your solution becomes a name for the resource group for tracking your resources and spending. 
-* Choose a location that is geographically to your business users.
-* Click Create
+* Choose a location that is close geographically to your business users.
+* Click Create.
 
 The deployment goes through several provisioning and setup steps, using a combination
  of Azure Resource Manager (ARM) templates and Azure Functions. 
@@ -101,8 +105,8 @@ The deployment goes through several provisioning and setup steps, using a combin
  Functions used in this solution in later sections.
 
 You will need to interact with the installer once, to create a user name and pasword
-for the database administrator account. Remember this password well if you want to
-customize the solution. If you reset it (e.g., in the [Azure portal](https://portal.azure.com)),
+for the database administrator account. Be sure to remember this password if you want to
+customize the solution! If you reset the database (e.g., in the [Azure portal](https://portal.azure.com)),
 Azure Data Factory will have trouble talking to the SQL server and the Linked Services
 will need an updated connection string with the new password.
 
@@ -119,15 +123,15 @@ Let us explain in detail the purpose of each Azure resource.
 
 #### The Power BI workspace ("epbi-[uniqueID]")
 The Power BI workspace is a container to host your Power BI dashboards in the cloud.
-It starts populated with the solution dashboard. Hosting your dashboards in a workspace
+It is initially populated with the solution dashboard. Hosting your dashboards in a workspace
 enables embedding them in a Web App.
 
 #### The Function App ("functions-[uniqueID]")
-The Function App hosts Azure Functions, short tasks that are run after deployment, such as copying
+The Function App hosts Azure Functions; short tasks that are run after deployment, such as copying
 assets into the solution storage account, populating the database with the example dataset, and 
 retrieving credentials for display in the final deployment page.
 The website which embeds the PowerBI workshop for display in the browser 
-(<tt>pbijs</tt> and <tt>pbiweb</tt>) is also a "Function App".
+(<tt>pbijs</tt> and <tt>pbiweb</tt>) is also a Function App.
 
 #### The Hosting Plan ("hosting[uniqueID]")
 The hosting plan is a scaling and billing layer for the web applications.
@@ -157,29 +161,30 @@ We provision a new LRS account and recommend that you turn the encryption on aft
 
 ### One-time workbook setup
 
-After the solution is deployed, you will get a basic graphical overview in the dashboard.
+After the solution is deployed, you will see a basic graphical overview in the Power BI dashboard.
 To get numeric outputs, you will need configure an Excel template for interacting with the solution. 
 Download the [template](https://aka.ms/pricingxls) and open it. 
-It has multiple tabs, each corresponding to a task in pricing analysis.
+The Excel workbook has multiple tabs, each corresponding to a task in pricing analysis.
 
-The configuration means connecting the appropriate web services to the workbook.
-Please connect these services by pasting their request-response URL and into the AzureML plugin.
+Configuration requires connecting the appropriate web services to the workbook.
+Please connect these services by pasting their request-response URL into the AzureML plugin.
 The URLs and keys are displayed at the final CIQS page, which you can access
 from the [Deployments section of CIQS](https://start.cortanaintelligence.com/Deployments).
 You can also see all of your services [here](https://services.azureml.net).
 
-Detailed connection instructions are found in the worksheet, on the "Instructions" tab.
-After adding the services, save the Excel spreadsheet under an appropriate name; 
-we use <tt>AnalysisTemplate.xsls</tt> and share with users in your organization.
-This configured workbook template will be used to load data output from the analytical pipeline.
+Detailed connection instructions are found in the workbook, on the "Instructions" tab.
+After adding the services, save the Excel workbook under an appropriate name; 
+we use <tt>AnalysisTemplate.xsls</tt> and share it with users in your organization.
+This configured workbook template will be used to receive data output from the analytical pipeline.
 
 ### Step-By-Step Visual Studio Deployment
 
-It is possible to deploy the elements of the solution with a few clicks 
+For modification of the solution,
+it is possible to deploy the elements of the solution with a few clicks 
 from their Visual Studio solution files, using Cloud Explorer. 
 The advantage of this method is that you have source control of any modification you are making to the solution,
-and is appropriate for developers and integrators. It requires the full solution source code
-If you are a Microsoft partner, please contact us to arrange access for customer deployments.
+as is appropriate for developers and integrators. It requires the full solution source code.
+If you are a Microsoft partner, please contact us to arrange access.
 
 ## Connecting Your Data
 
@@ -188,7 +193,7 @@ This section describes the inputs and output datasets of the solution.
 
 ###	Input dataset
 
-The main prerequisite is the sales history. 
+The main prerequisite is sales history data. 
 The solution expects sales history data in the table <tt>dbo.pricingdata</tt>, 
 with the folllowing schema:
 
@@ -206,10 +211,10 @@ CREATE TABLE dbo.pricingdata (
 )
 ```
 
-The solution defines the data as an external ADF dataset, which means the data is expected to "just appear" in this table. 
+The solution defines the data as an external ADF dataset, which means the data is expected to be present in this table. 
 It is the integrator's responsibility to ensure that it does. 
-We recommend that you use Azure Data Factory or SSIS to push sales data incrementally from the business data warehouse to this table. 
-While transforming data, please consider the following points.
+We recommend that you use Azure Data Factory or SSIS to push sales data incrementally from your business data warehouse to this table. 
+While preparing the data, please consider the following points:
 
 * Data can be aggregated weekly or left in the original one-row-per-transaction state, in which case the system will be aggregate it to weekly quantities.
 * If you aggregate the transactions, we recommend *against* defining the price as a weekly average of prices.
@@ -231,17 +236,17 @@ They underlie the Solution dashboard and can be used to create other visuals as 
 
 #### Common columns and conventions
 
-Current run outputs are appended to these tables.
+Outputs from the current run are appended to these tables.
 
-Each has a RunDate column, corresponding to the date on which the data was inserted. 
+Each table has a RunDate column, corresponding to the date on which the data was appended. 
 The RelationValidDate column refers to the time for which the value of elasticity or demand was measured.
 For example, one might run the model on Jun 30, 2017 and obtain estimates for all times in the history.
-Then Rundate ='2017-06-30' and there will be a number of RelationValidDates, one for each historical periods.
+Then Rundate ='2017-06-30' and there will be a number of RelationValidDates, one for each historical period.
 
 All tables have columns named Item, SiteName, ChannelName, and CustomerSegment, identifying
 the specific individually priced SKU for which the estimate or prediction is given.
 
-Where columns named &lt;Measure&gt;90LB and &lt;Measure&gt;90UB appear, this is the 90-percent confidence
+Where there appear columns named &lt;Measure&gt;90LB and &lt;Measure&gt;90UB, they indicate the 90-percent confidence
 interval around the estimate.
 
 #### Elasticities dataset
@@ -261,6 +266,7 @@ CREATE TABLE dbo.Elasticities (
 ```
 
 #### Cross-Elasticities dataset
+
 The Cross-Elasticities table stores all the cross-elasticities that were estimated.
 
 ```sql
@@ -279,10 +285,11 @@ CREATE TABLE dbo.CrossElasticities (
 ```
 
 There are two sets of items, prefixed with Driving and Impacted, since cross-elasticity
-is a directional relation. The measurement is in the CrossElasticity column.
+is an asymmetric relation. The estimated value is in the CrossElasticity column.
 
 
 #### Forecasts dataset
+
 The Forecasts table stores all the forecasts the model has made.
 RunDate doubles as an identifier of the forecast run.
 
@@ -311,14 +318,15 @@ CREATE TABLE dbo.Forecasts (
 )
 ```
 
-LastDayOfData is the last day of data available at the time that this forecast is made.
-PeriodInDays makes it clear how many days there are in the forecast period.
-PeriodsAhead is how many periods ahead we are forecasting.
-ForecastPeriodStart and ForecastPeriodEnd denote the date range in which the predicted Demand is to be realized.
-The measurement is in the Demand column.
+- LastDayOfData is the last day of data available at the time that this forecast is made.
+- PeriodInDays makes it clear how many days there are in the forecast period.
+- PeriodsAhead is how many periods ahead we are forecasting.
+- ForecastPeriodStart and ForecastPeriodEnd denote the date range in which the predicted Demand is to be realized.
+
+The estimate is in the Demand column.
 If the forecast is made for a period in the past, the ActualSales are known, 
-and the Symmetrics Average Percentage Error (sAPE) is calculated.
-To put the sAPE in perspective, the qBar is a smoothed measure demand around the forecast period.
+and the Symmetric Average Percentage Error (sAPE) is calculated.
+To put the sAPE in perspective, the qBar is a smoothed-measure demand around the forecast period.
 
 #### Suggestions dataset
 
@@ -355,14 +363,14 @@ CREATE TABLE [dbo].[SuggestionRuns] (
 );
 ```
 
-The suggestionRunID is an identifier referring to the date of model 
-build from which the suggestion are created.
+The suggestionRunID is an identifier referring to the date of the model 
+build version from which the suggestion are created.
 
-<tt>PastPeriodStart</tt> and <tt>PastPeriodEnd</tt> describe the time interval for which
+- <tt>PastPeriodStart</tt> and <tt>PastPeriodEnd</tt> describe the time interval for which
 the baseline numbers (Orders, Revenue, Margin) are taken (the "past period").
-<tt>SuggestionPeriodStar</tt> and <tt>SuggestionPeriodEnd</tt> describe the period for
+- <tt>SuggestionPeriodStar</tt> and <tt>SuggestionPeriodEnd</tt> describe the period for
 which the price is proposed (the "suggestion period").
-<tt>minOrders</tt> is the minimum number of orders that need to have occured
+- <tt>minOrders</tt> is the minimum number of orders that need to have occured
 for the item in the past period to be considered in the suggestion pipeline.
 
 Then we have the baseline numbers: <tt>UnitsLastPeriod</tt>, <tt>avgSaleUnitPrice</tt>,
@@ -370,7 +378,7 @@ Then we have the baseline numbers: <tt>UnitsLastPeriod</tt>, <tt>avgSaleUnitPric
 whose interpretations are hopefully clear. 
 <tt>Orders</tt> will be more than 1 only if disaggregated data are entered.
 
-<tt>Elasticity</tt> comes from the model estimatuon step, and the optimal prices
+- <tt>Elasticity</tt> comes from the model estimatuon step, and the optimal prices
 follow from it and the marginal cost (avgCostUnitPrice). The exact price maximizing
 the gross profit margin is <tt>marginOptimalPrice</tt>, which is then rounded to
 "x.y9". The model predicts that it should be possible to make additional 
@@ -403,7 +411,7 @@ pipeline and therefore need configuration.
 
 ### Adjusting suggestion lead times
 
-Today, you can adjust the lead times on suggestion by manipulating the date parameters 
+In the current version you can adjust the lead times on suggestion by manipulating the date parameters 
 which Azure Data Factory passes to the <tt>spRecommendProducts</tt> stored procedure Activity
 (see ADF description below). If you would like multiple suggestion periods, please
 duplicate the stored procedure activity and call it with different parameters.
@@ -428,7 +436,7 @@ will necessitate ETL jobs sending the data to other applications.
 
 First, we will address the case of integrating the services into an application.
 Whether you are building a customer-specific user interface in Excel or another application, 
-you will want to call the web services. We first give an detailing example of calling the 
+you will want to call the web services. We first give an detailed example of calling the 
 Elasticity web service from Excel and describe its inputs and outputs. 
 The other services operate analogously.
 
@@ -440,9 +448,9 @@ For customizing the AzureML services, please contact us directly.
 ### Excel Example: Elasticity Service
 
 You can inspect the elasticities of every product by navigating to the "Elasticities" tab 
-of the Excel template nd opening the "Elasticity" service pane of the AzureML plugin.
+of the Excel template and opening the "Elasticity" service pane of the AzureML plugin.
 
-![AzureML plugin pane for Elasticity Service](../images/ElasticityAzureMLplugin.png){style="width: 300px"}
+![AzureML plugin pane for Elasticity Service](../images/ElasticityAzureMLplugin.png)
 
 Because elasticities can change in time, a query date is required in cell A6 of the spreadsheet.
 We recommend using the date of the most recent model. The A5:A6 range of cells is the input to the service.
@@ -451,13 +459,13 @@ We recommend using the date of the most recent model. The A5:A6 range of cells i
 
 The output location should be set to a convenient location in the spreadsheet, e.g. Elasticities$A20.
 The "datasetName" parameter is 'latestModelBuild', where data refers to the day on which the model
-was created, using data available up to that day. You can explore previous models as well
+was created, using data available up to that day. You can explore previous models as wel.
 
 The output consists of a dataframe containing the estimated elasticity of every Item at every
 Site, as well as the 90% confidence interval for the estimate. The range of elasticities can
 be seen in one glance by clicking on the generated external figure link containing the elasticity histogram.
 
-![Elasticity histogram](../images/elasticityHistogram.png){style="width:400px"}
+![Elasticity histogram](../images/elasticityHistogram.png)
 
 To build customer analyses in Excel, you can use the output values in Excel calculations just like any value.
 Look in the Promotion Simulation tab for a simple example of building a dynamically updated chart
@@ -467,41 +475,41 @@ To get the service to behave as if it was a first-order Excel function and updat
 values in its output cells every time the input changes, check the Auto-predict box.
 
 
-
 ### Calling REST APIs from anywhere
 
 The services are simply AzureML RESTful APIs. You can go to (https://services.azureml.net)
 to grab sample code to consume them from R, Python, or C#. 
 
-See the swagger documentation to the services to understand their input and output requirements.
+See the Swagger documentation to the services to understand their input and output requirements.
 The same information is reflected in the VIEW SCHEMA pane of the AzureML plugin.
 
 ### Individual Services Descriptions
 
-There are three types of ML service in this solution, batch model build, interactive retrieval 
+There are three types of ML services in this solution: batch model build, interactive retrieval 
 and bulk retrieval services. 
 
 The batch model build service is BuildModel and is responsible for all estimation 
-and forecasting tasks. Depending on data size, it can run several minutes to hours.
+and forecasting tasks. Depending on data size, it can run for several minutes to hours.
 
 The **interactive** services are:
-* Elasticities - retrieve elasticities for one product at all sites, channels, and segments
+
+* Elasticities - retrieve elasticities for one product at all sites, channels, and segments.
 * CrossElasticities - retrieve cross-elasticities for all products and channels at one site. 
                         The model assumes the same items at different sites don't compete.
                         Perhaps more questionably, it also assumes that customer segmentation
                         boundaries are not permeable.
-* Forecasts - retrieve forecasts at one site, at a specific pricing point
-* PromoSimulation - simulate a promotional scenario
-* Outliers - identify the items which had large forecast failures
+* Forecasts - retrieve forecasts at one site, at a specific pricing point.
+* PromoSimulation - simulate a promotional scenario.
+* Outliers - identify the items which had large forecast failures.
 * RetrospectiveAnalysis - assists 
 
-The service names may have have a PE_ prefix (for "Pricing Engine").
-These services are expected to return within a few seconds (the first query after a while may be slow
+The service names may have a PE_ prefix (for "Pricing Engine").
+These services are expected to return within a few seconds (The first query after a while may be slow
 as the containers "warm up"). All services have usage instructions in the template spreadsheet.
 
 The **bulk services** are used to export the data from the model to the database.
 They output large amounts of data. In the solution, they are called in batch mode
-and their output stored in the database after output in the storage account.
+and their output stored in the database after output to the storage account.
 Each service produces one dataset.
 
 * BulkElasticities - get all estimated elasticities, outputs to the <tt>elasticity</tt> container
@@ -514,10 +522,10 @@ The Azure Data Factory has three Pipelines:
 
 - **Configure Services Pipeline** creates small datasets containing solution parameters.
 - **Pricing Pipeline** This is the large modeling pipeline which 
-- * Prepares the data for modeling
-  * Runs the models
-  * Extracts forecasts and elasticities from the model
-  * Loads the model outputs into the database for visualization
+- * Prepares the data for modeling,
+  * Runs the models,
+  * Extracts forecasts and elasticities from the model, and
+  * Loads the model outputs into the database for visualization.
 - **Suggestions Pipeline** creates pricing suggestions based on outputs of the Pricing pipeline.
 
 You can view your pipelines in the Azure portal.
@@ -539,21 +547,24 @@ The storage account has the following important folders:
 
 ## Troubleshooting
 
-Most of the trouble we experienced has to do with needing to scale up.
-The solution is deployed at minimal performance and cost levels, and larger datasets may
+Most of the trouble we experienced has to do with the demanding of scaling up.
+The solution is deployed with minimal Azure performance and cost levels, and larger datasets may
 need to use higher tiers of the resources.
 
 #### "Blob does not exist" errors
+
 The blob name is created from the datasetName given in the spreadsheet.
 Open the storage account and make sure a model with the given datasetName exists. 
 The name is case-sensitive.
 The default datasetName used by ADF is "latestDemoBuild".
 
 #### Timeouts on the BuildModel service
+
 Try increasing the timeout period in the <tt>retrain_AzureML_Model</tt> ADF activity.
 
 ### Database or dashboard slow
-If you are experiencing performance issues with the database, try using a Premium database.
+
+If you are experiencing performance issues with the database, try using a Premium database instead.
 Since the dashboard is direct-query, performance issues with the dashboard are often
 also database throughput issues.
 
