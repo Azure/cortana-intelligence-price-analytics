@@ -20,13 +20,13 @@ Open the AzureML plugin pane on the right and delete the example web services (T
 and Text Sentiment Analysis). 
 
 Click Add and paste the URL and API key of the PromotionSimulation
-web service from the Instructions page at the end of the deployment. 
-If you closed that page, you can come back to it from the 
+web service from the Instructions page shown when the solution deployment completed. 
+If you closed that page, you can return to it from the 
 [Deployments section of Cortana Intelligence Quick Starts](https://start.cortanaintelligence.com/Deployments).
 
 ## Promotion Simulation
 
-In the spreadsheet, find the Simulate Promotion tab. It has a yellow box with instructions.
+In the workbook, find the Simulate Promotion spreadsheet. It has a yellow box with instructions.
 You have already completed the first step of those instructions (set up web service).
 
 Follow the instructions in the spreadsheet, but choose A18 as the destination (output) cell. 
@@ -38,7 +38,7 @@ If the table at A18 fills out successfully, then your model has already been bui
 If you get an error, please build a model according to the instructions in the next section.
 
 Experiment with the price of Minute Maid on week 2. Note that both the sales
-of tropicana and dominicks are affected the same week (cannibalization)
+of Tropicana and Dominicks are affected the same week (cannibalization)
 and sales of the same product are affected in the next week (pull-forward).
 
 ## Building a model interactively
@@ -48,7 +48,7 @@ and the model names 'latestDemoBuild' does not exist.
 
 In this case, build a model from your data ad-hoc.
 
-To build a model, open the Excel template and navigate to the Data and Model tab.
+To build a model, open the Excel workbook and navigate to the Data and Model tab.
 Follow the instructions on the spreadsheet, choosing some name other than
 'latestDemoBuild' for the datasetName.
 

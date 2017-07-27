@@ -33,9 +33,9 @@ goes into more detail about how to integrate the solution with your cloud or on-
 ## How to Install the Pricing Solution
 
 A "solution" refers to an assembly of Azure resources, such as predictive services, cloud storage and
-scheduled data pipelines, that constitute an Azure application. 
+scheduled data pipelines that constitute an Azure application.  
 There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/browse?categories=["10"]&orderby=freshness desc/) that has a single-button install for this solution. 
-To deploy the solution, go to the [Interactive Price Analytics] (https://gallery.cortanaintelligence.com/Solution/Interactive-Price-Analytics) web page, and click Deploy.
+To deploy the solution, click deploy on the [Interactive Price Analytics] (https://gallery.cortanaintelligence.com/Solution/Interactive-Price-Analytics) web page, and .
 
 Assuming you've already set up an Azure subscription, this will place a copy of the resources there.
 Please follow the installation instructions for the one manual step needed (set up username and password for database).
@@ -44,13 +44,13 @@ It will help you find where these resources can be found in your Azure Portal.
 The final deployment page is always available in your [CIQS deployments](https://start.cortanaintelligence.com/Deployments).
 
 Selected Microsoft partner System Integrators and ISVs offer services to customize 
-an installed solution to build specific pricing decision support applications on Azure for a clients' specific needs. 
+an installed solution to build pricing decision support applications on Azure specific to a clients' specific needs. 
 
 ### One-time workbook setup
 
 You will need the Excel application workbook for the Solution for interacting with the elasticity models. 
-It has multiple sheets, one for each of the different steps in pricing analysis.
-Before the sheet can be used, it must be set up by connecting the appropriate web services to the workbook.
+It has multiple sheets, one for each web service in pricing analysis.
+Before a sheet can be used, it must be set up by connecting the appropriate web service to the workbook.
 Please connect these services by going to https://services.azureml.net 
 and pasting the request-response URL into the AzureML plugin after clicking "Add".
 
@@ -86,26 +86,26 @@ The pricing solution implements an advanced observational approach to factor out
 
 The core concept is that of price elasticity of demand, a measure of how sensitive the aggregate demand is to price.
 
-**Self-price elasticity** is the percentage "lift" in sales of a product if we put it on a 1% discount.
+**Self-price elasticity** is the percentage "lift" in sales of a product if we discountput it by 1%.
 Most consumer products have elasticities in the range of 1.5-5. 
 In the chart below, the product has an elasticity of -2 in this small range of prices.
 
-![Price Elasticity Graph](../images/016_ElasticityCurve.png){style="width:600px"}
+![Price Elasticity Graph](../images/016_ElasticityCurve.png)
 
 Products with more competitors are easier to substitute away from and will have higher elasticity. 
 Discretionary products are more elastic than staples.
 
-Elasticity (consumer response to price) varies 
+Elasticity (consumer response to price) varies by
 
-* product to product
-* current price point 
-* time
-* sales channel
-* location
-* customer segments and 
-* other considerations. 
+* current price point, 
+* time,
+* sales channel,
+* location,
+* customer segments,  
+* from product to product, and
+* by other considerations. 
 
-This PCS includes a model that computes an elasticity for each combination  of 
+This Solution includes a model that computes an elasticity for each combination  of 
 (Item, Location, Channel, Segment, Week). 
 
 **Optimal price** is any price that optimizes some business objective. The most natural business objective
@@ -132,17 +132,17 @@ build pricing models on schedule or interactively, identify related products,
 review pricing recommendations, and view promotion impacts in terms of additional 
 sales and margins.
 
-### Seeing your data
+### Examining your data
 
 Even before you begin to analyze your data, it may be useful to simply look at it.
-The solution dashboard contains two panes for descriptive analysis.
+The Power BI solution dashboard contains two panes for descriptive analysis.
 
-The Time Series tab allows you to see the data in time, filtering down to products,
+The Time Series tab allows you to see the data over time, filtering down to products,
 sites, channel, segments and time periods.
 * Actual sales time series, filterable by category hierarchy, site, and channel
 ![Time series tab](../images/dashboard_time_series.png)
 
-The DemandVsPrice tab shows the simplest possible (and inaccurate) method of estimating price elasticity.
+The Demand-vs-Price tab shows the simplest possible (and inaccurate) method of estimating price elasticity.
 We plot demand versus price and obtain downward sloping lines expressing how demand decreases with
 increasing price. Again, the full complement of filters is available.
 
@@ -156,7 +156,7 @@ the spreadsheet.
 
 **Pre-built model.** The solution database is pre-populated with a demonstration dataset 
 ([Orange Juice](https://www.rdocumentation.org/packages/bayesm/versions/3.0-2/topics/orangeJuice)) 
-with dates shifted to create an appearance of data coming in weekly. 
+with dates shifted to create an appearance of data arriving weekly. 
 The pre-configured model is automatically re-built weekly from the current data.
 You will therefore have a model called 'latestDemoBuild' available out of the box.
 
@@ -172,9 +172,9 @@ Please follow this schema:
 
 Navigate to the AzureML plugin and find the service with "BuildModel" in its name.
 (If you don't have a BuildModel service connected, please connect the service 
- per the Instructions tab of the workbook).
+per the Instructions tab of the workbook).
 
-Now, select all of your data, including headers, and click �Predict as Batch� in the AzureML plugin window. 
+Now, select all of your data, including headers, and click _Predict as Batch_ in the AzureML plugin window. 
 On OJ data, this will take about 3 minutes to output the products, locations and date ranges the engine recognizes. 
 The output should look like this.
 
@@ -192,6 +192,8 @@ You pick suggestions from the dashboard, analyze them individually, and set new 
 
 ![Price Setting Workflow](../images/PriceSettingWorkflow.png)
 
+The steps in the workflow are as follows:
+
 * review overpriced/underpriced items report and suggested prices 
 * visualize the demand curves
 * review elasticities and cross-products effects: substitute and complementary products
@@ -201,7 +203,7 @@ You pick suggestions from the dashboard, analyze them individually, and set new 
 #### Pricing Suggestions
 
 Pricing suggestions are directly exposed in the solution dashboard. Please navigate to the
-Pricing Suggestions tabs in the solution dashboard and filter down to the specific item
+Pricing Suggestions tabs in the Power BI solution dashboard and filter down to the specific item
 and location. 
 
 RunDates are used to keep track of the weekly model runs and monitor the performance over time.
@@ -215,7 +217,7 @@ is in the Minute Maid juice ($189k). It currently sells for $1.26, massively bel
 of $1.84. It seems like the store is running a promotion on the juice and losing money on it. 
 The system proposes to sell it at $2.29 and forecasts demand of 17,159 units at that price.
 
-![Suggestions](../images/015_RecommendedPrices.png)
+![Suggestions](../images/015_RecommendedPrices.PNG)
 
 Dominick's juice is currently sold at $0.99, the marginal cost is $1.25, 
 and the suggested price is $1.69. At the suggested price, we predict 
@@ -227,17 +229,16 @@ the margin calculations. They are not provided in the original OJ dataset.)
 
 #### Review elasticities 
 
-It may be difficult to trust an opaque model to make a good suggestion if it doesn't expose the basis of its prediction.
-The basis for pricing prediction is the elasticity value for each product.
-
-The easiest way of seeing the estimated elasticities is to look at the solution dashboard,
+It may be difficult to trust an opaque model to make a good suggestion if it doesn't expose 
+the elasticity value for each product---the basis of its prediction.
+The easiest way of seeing the estimated elasticities is to look at the Power BI solution dashboard's
 the Elasticities tab.
 
 ![Dashboard Elasticities tab](../images/dashboard_elasticities.png)
 
 On this tab you can see the distributions of elasticities. For example, you can see that
 Tropicana juice (red) is the least elastic. The distribution of estimated Tropicana elasticities
-(over sites, channel, etc.) is centered aournd -3.5, with two peaks around -3.4 and -3.7.
+(over sites, channel, etc.) is centered around -3.5, with two peaks around -3.4 and -3.7.
 Elasticities of Dominick's and Minute Maid juices have very similar distribution, and both are
 more elastic products than Tropicana. This corresponds nicely to the slopes of the lines on
 the Demand vs Price tab, and to the fact of Tropicana being the most desirable of the products.
@@ -246,7 +247,7 @@ Over time the estimated elasticities have fluctuated but the overall picture of 
 elasticity of Tropicana and lower ones for Minute Maid and Dominick's hold. 
 
 Note we have filtered down to only the elasticities estimated in the latest model run (Sunday May 28th).
-Each model run estimated elasticities from the entire history up to and including the model run date.
+Each model run estimates elasticities from the entire history up to and including the model run date.
 With long histories, models tend to be stable: if you click through the model runs, the results are very similar. 
 
 #### Optional: Acessing elasticities from Excel
@@ -268,7 +269,7 @@ Please review your business with a statistician if you get elasticities above ze
 #### Visualize the Demand Curve
 
 Demand Curve visualization is available as an Excel service only.
-You invoke the DemandCurve AzureML service from the Demand Curve tab of the spreadsheet.
+You invoke the DemandCurve AzureML service from the Demand Curve tab of the workbook.
 
 The service gives you the estimated quantity and gross margin of a single product 
 sold over a range of price points for the product. 
@@ -291,8 +292,8 @@ and use them in your Excel calculations.
 #### Cross-price elasticities
 
 Cross-price elasticities indicate how price of one product affects sales of other products.
-For instance, if the cross-price-elasticity of demand for peanut butter (impacted product) 
-with respect to price of jelly (impacting product) is -3, you can expect a 3% increase of
+For instance, if the cross-price-elasticity of demand for peanut butter (the affected product) 
+with respect to price of jelly (the affecting product) is -3, you can expect a 3% increase of
 demand for peanut butter if you lower the price of jelly by 1%. 
 
 When deciding on the price of a product, the purpose of finding the related products
@@ -311,14 +312,14 @@ is weaker.
 
 ![Cross-elasticties](../images/cpElasticity.png) {style="width: 400px"}
 
-We currently assume there is no effect across sites and channels.
+We currently assume there is no cross-elasticity affect across sites and channels.
 
 #### Simulating the effect of a promotion
 
 Before making a final pricing decision, many pricing managers will desire 
 to review the predicted effect of a price change, comprehensively across products.
 This interactive feature is available only in Excel because it requires the user to 
-input a hypothetical promotional scenario (entering data is awkward in PowerBI).
+input a hypothetical promotional scenario (entering data is awkward in Power BI).
 
 ![Promotion Simulation in Excel](../images/012_PromoSim.png)
 
@@ -355,13 +356,13 @@ For the Elasticity section, we show the estimated values. On average, these
 should not move very much for any of the sites, products or items. 
 You are looking for a stable performance across model runs.
 
-For forecasts, we are showing the symmetric APE as the main performance metric,
+For forecasts, we are showing the Symmetric Average Percent Error (SAPE) as the main performance metric,
 again dis-aggregated by item, site, channel, etc.
 
 
-There are two Excel services allow you to pinpoint items where the model may be particularly
+There are two Excel services that allow you to pinpoint items where the model may be particularly
 far off target. Fundamentally, they look for bad forecast failures.
-You should be extra careful using the results for these items.
+You should be extra careful using predictions identified by these services.
 
 ### Finding Outliers
 
@@ -381,9 +382,10 @@ The counterfactual is visualized as trend line.
         time, and method. 
 * Site: A store or a warehouse where the demand is fulfilled.
 * Channel: Sales channel, for instance In-Store sales vs Internet shipping order. Prices may differ by channel.
-* Customer Segment: is distinct from Channel, but may be correlated, or usage of the sales channel may be
-                  a means of price discrimination. A typical segmentation might be on "UsedCouponX",
-                  with prices differing for different coupon types.
+* Customer Segment: A grouping of similar customers, distinct from Channel, but may be correlated, or 
+                    usage of the sales channel may be
+                    a means of price discrimination. A typical segmentation might be on "UsedCouponX",
+                    with prices differing for different coupon types.
 
 ## References
 

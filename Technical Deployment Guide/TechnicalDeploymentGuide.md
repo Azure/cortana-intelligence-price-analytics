@@ -1,7 +1,7 @@
 # Interactive Pricing Analytics Solution: Technical Deployment Guide
 
 This document explains how to deploy the default configuration of the Interactive Pricing Analytics Solution.
-It is intended for technical personnel who deploy the solution and connect it to the business data
+It is intended for technical personnel who will deploy the solution and connect it to the business data
 warehouse.
 
 ## Outline
@@ -19,7 +19,7 @@ warehouse.
 
 The Pricing Analytics Pre-Configured Solution (PCS) consists of a set of tools 
 to help set prices for wholesale and retail products based on transaction records of past sales. 
-It is made up of Azure cloud and Office components.
+It is made up of Azure Cloud and Office components.
 The solution targets mid-size companies with small pricing teams who lack extensive data science
 support for complex pricing models and data flows.
 
@@ -28,6 +28,7 @@ The accompanying [User Guide](../User%20Guide/UserGuide.md) will help you unders
 model and how the solution is intended to be used.
 
 ### Suitable and unsuitable applications
+
 We recommend this solution for retail-like contexts where each customer segment faces the same posted price. 
 The customer id may or may not be known at the time of the sale. 
 The solution is unsuitable when the majority of transactions have prices negotiated individually.
@@ -45,7 +46,7 @@ The solution architecture consists of the following Azure components:
 * **Azure Storage** account, used to save the model and intermediate data in **Blobs**.
 * A model build **AzureML web service**, running in batch mode. 
 * A collection of several interactive **Azure ML services** for querying the model. All services are created
-  by turning the pricing engine python package into a web service on the AzureML platform.
+  by turning the pricing engine package into a web service on the AzureML platform.
 * A **PowerBI dashboard**, hosted in a **Azure Web App**
 * **Azure Data Factory** for scheduling regular execution
 
