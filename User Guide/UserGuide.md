@@ -1,12 +1,12 @@
 # Interactive Pricing Analytics Pre-Configured Solution: User Guide
 
 This document is intended for the end user of the solution. It will guide you through
-the use of the solution in its default configuration. 
+the use of the solution as it comes "out of the box." 
 
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Automated Installation](#automated-installation)
+2. [How to Install the Pricing Solution](#how-to-install-the-pricing-solution)
 3. [Economic Foundations](#economic-foundations)
 4. [Using the Pricing Engine](#using-the-pricing-engine)
 5. [Monitoring the Pricing Engine](#monitoring-the-pricing-engine)
@@ -17,38 +17,39 @@ the use of the solution in its default configuration.
 ## Introduction
 
 The Interactive Pricing Analytics Pre-Configured Solution (PCS) is an Azure cloud application providing 
-a set of tools to help set prices for wholesale and retail products based on transaction records of past sales. 
+a set of tools to recommend prices for wholesale and retail products based on elasticity estimates from 
+transaction records of past sales. 
 It is targeted at mid-size companies with small pricing teams who lack extensive data science support 
 for bespoke pricing analytics models.
 
 This document explains how to install the solution in your Azure subscription, load your transaction data in it, 
-and run the tools from your desktop using Excel, to generate prices, e.g. for a monthly promotion, and predict
-the effect of these prices on sales and revenue. 
+and run the tools from your desktop using the Excel workbook that comes with the solution, to generate prices, 
+e.g. for a monthly promotion, and predict the effect of these prices on sales and revenue. 
 
-This document also explains the pricing theory behind the tools, documents the solution architecture, and shows
-how to use the solution. The accompanying [Technical Deployment Guide](../Technical%20Deployment%20Guide/TechnicalDeploymentGuide.md) 
+This document also explains the pricing theory behind the tools, documents the solution architecture as it
+resides in Azure. The accompanying [Technical Deployment Guide](../Technical%20Deployment%20Guide/TechnicalDeploymentGuide.md) 
 goes into more detail about how to integrate the solution with your cloud or on-premise data. 
 
-## Automated Installation 
+## How to Install the Pricing Solution
 
 A "solution" refers to an assembly of Azure resources, such as predictive services, cloud storage and
-scheduled data pipelines, that constitute an application. 
-There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/) that has a single-button install for this solution. 
-To deploy the solution, go to its [Cortana Intelligence web page](https://start.cortanaintelligence.com/Deployments/new/msr-pricing-class) and click Deploy.
+scheduled data pipelines, that constitute an Azure application. 
+There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/browse?categories=["10"]&orderby=freshness desc/) that has a single-button install for this solution. 
+To deploy the solution, go to the [Interactive Price Analytics] (https://gallery.cortanaintelligence.com/Solution/Interactive-Price-Analytics) web page, and click Deploy.
 
 Assuming you've already set up an Azure subscription, this will place a copy of the resources there.
 Please follow the installation instructions for the one manual step needed (set up username and password for database).
 Take note of the final page of the CIQS deployment, listing names of resources deployed. 
-It will help you find resources like "the storage account". 
+It will help you find where these resources can be found in your Azure Portal. 
 The final deployment page is always available in your [CIQS deployments](https://start.cortanaintelligence.com/Deployments).
 
-Our partner System Integrators and ISVs will be able to customize 
-the PCS to build specific pricing decision support applications on Azure for their clients' specific needs. 
+Selected Microsoft partner System Integrators and ISVs offer services to customize 
+an installed solution to build specific pricing decision support applications on Azure for a clients' specific needs. 
 
 ### One-time workbook setup
 
-We provide an Excel application template for interacting with the elasticity models. 
-It has multiple tabs, one for each of the different steps in pricing analysis.
+You will need the Excel application workbook for the Solution for interacting with the elasticity models. 
+It has multiple sheets, one for each of the different steps in pricing analysis.
 Before the sheet can be used, it must be set up by connecting the appropriate web services to the workbook.
 Please connect these services by going to https://services.azureml.net 
 and pasting the request-response URL into the AzureML plugin after clicking "Add".
@@ -56,7 +57,7 @@ and pasting the request-response URL into the AzureML plugin after clicking "Add
 Detailed connection instructions are found in the worksheet, on the "Instructions" tab.
 After adding the services, save the Excel spreadsheet under an appropriate name; 
 we use <tt>AnalysisTemplate.xsls</tt>.
-This configured workbook template will be used to load data output from the analytical pipeline.
+The configured workbook will be used to run the Solution, and display data output from the analytical pipeline.
 
 ## Economic Foundations
 
@@ -173,7 +174,7 @@ Navigate to the AzureML plugin and find the service with "BuildModel" in its nam
 (If you don't have a BuildModel service connected, please connect the service 
  per the Instructions tab of the workbook).
 
-Now, select all of your data, including headers, and click “Predict as Batch” in the AzureML plugin window. 
+Now, select all of your data, including headers, and click ï¿½Predict as Batchï¿½ in the AzureML plugin window. 
 On OJ data, this will take about 3 minutes to output the products, locations and date ranges the engine recognizes. 
 The output should look like this.
 
