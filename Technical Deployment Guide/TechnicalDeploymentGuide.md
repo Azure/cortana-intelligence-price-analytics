@@ -114,7 +114,7 @@ will need an updated connection string with the new password.
 Once the solution is deployed to the subscription, you can see the services deployed by clicking the resource 
 group name on the final deployment screen. 
 
-![Solution Resource group](../images/resource_group.png)
+![Solution Resource group](../images/resource_group.PNG)
 
 The names of most of the resources will contain an illegible string (uniqueID) 
 that makes them uniquely identifiable (which helps if you have multiple deployments).
