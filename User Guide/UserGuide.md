@@ -34,8 +34,9 @@ goes into more detail about how to integrate the solution with your cloud or on-
 
 A "solution" refers to an assembly of Azure resources, such as predictive services, cloud storage and
 scheduled data pipelines that constitute an Azure application.  
-There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/browse?categories=["10"]&orderby=freshness desc/) that has a single-button install for this solution. 
-To deploy the solution, click deploy on the [Interactive Price Analytics] (https://gallery.cortanaintelligence.com/Solution/Interactive-Price-Analytics) web page, and .
+There is an entry in the [Cortana Intelligency Gallery](https://gallery.cortanaintelligence.com/browse/?skip=0&categories=%5B%2210%22%5D&orderby=updated_at%20desc) 
+that has a single-button install for this solution. 
+To deploy the solution, click Deploy on the [Interactive Price Analytics](https://gallery.cortanaintelligence.com/Solution/Interactive-Price-Analytics) web page, and .
 
 Assuming you've already set up an Azure subscription, this will place a copy of the resources there.
 Please follow the installation instructions for the one manual step needed (set up username and password for database).
@@ -56,7 +57,7 @@ and pasting the request-response URL into the AzureML plugin after clicking "Add
 
 Detailed connection instructions are found in the worksheet, on the "Instructions" tab.
 After adding the services, save the Excel spreadsheet under an appropriate name; 
-we use <tt>AnalysisTemplate.xsls</tt>.
+we use <tt>AnalysisTemplate.xslx</tt>.
 The configured workbook will be used to run the Solution, and display data output from the analytical pipeline.
 
 ## Economic Foundations
@@ -118,7 +119,7 @@ More frequently, you have substantial marginal costs (cost to make one more piec
 Then the constant -1 in the above calculation is replaced by - (Price)/(Gross Margin), 
 also known as the *inverse Lerner Index*. 
 For example, suppose your marginal cost of oranges is $4 and you are selling them for $5, making your
-gross margin $1. Your inverse lerner index is -5 and you should increase prices at lower elasticities (e > -5), 
+gross margin $1. Your inverse Lerner index is -5 and you should increase prices at lower elasticities (e > -5), 
 and decrease them otherwise. 
 
 
@@ -217,7 +218,7 @@ is in the Minute Maid juice ($189k). It currently sells for $1.26, massively bel
 of $1.84. It seems like the store is running a promotion on the juice and losing money on it. 
 The system proposes to sell it at $2.29 and forecasts demand of 17,159 units at that price.
 
-![Suggestions](../images/015_RecommendedPrices.PNG)
+![Suggestions](../images/015_RecommendedPrices.png)
 
 Dominick's juice is currently sold at $0.99, the marginal cost is $1.25, 
 and the suggested price is $1.69. At the suggested price, we predict 
@@ -310,7 +311,7 @@ The strongest effect we see is Minute Maid on Dominicks, meaning that lowering
 the price of Minute Maid eats into sales of Dominicks, whereas the converse effect
 is weaker.
 
-![Cross-elasticties](../images/cpElasticity.png) {style="width: 400px"}
+![Cross-elasticties](../images/cpElasticity.png){style="width: 400px"}
 
 We currently assume there is no cross-elasticity affect across sites and channels.
 
