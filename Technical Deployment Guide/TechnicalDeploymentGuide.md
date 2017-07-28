@@ -477,7 +477,7 @@ values in its output cells every time the input changes, check the Auto-predict 
 
 ### Calling REST APIs from anywhere
 
-The services are simply AzureML RESTful APIs. You can go to (https://services.azureml.net)
+The services are simply AzureML RESTful APIs. You can go to [your AzureML services link](https://services.azureml.net)
 to grab sample code to consume them from R, Python, or C#. 
 
 See the Swagger documentation to the services to understand their input and output requirements.
