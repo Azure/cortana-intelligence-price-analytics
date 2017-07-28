@@ -311,7 +311,7 @@ The strongest effect we see is Minute Maid on Dominicks, meaning that lowering
 the price of Minute Maid eats into sales of Dominicks, whereas the converse effect
 is weaker.
 
-![Cross-elasticties](../images/cpElasticity.png){style="width: 400px"}
+![Cross-elasticties](../images/cpElasticity.png)
 
 We currently assume there is no cross-elasticity affect across sites and channels.
 
