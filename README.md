@@ -1,43 +1,46 @@
-# Pricing Analytics
+# Interactive Price Analytics
 
 # Summary
 
-This solution on Pricing Analytics uses your sales history transactional data to predict how the demand 
-for your products responds to the prices you offer. This way you can recommend pricing changes, and  
-simulate how changes in price would affect your demand, at the level of individual products.
+The Interactive Pricing Analytics solution uses your sales history transactional data to predict 
+how the demand for your products responds to the prices you offer. 
+This way you can recommend pricing changes, and simulate how they would affect product demand, at the level of individual products.
 
 The core of the solution is the ability to
 estimate price elasticities for every product, site, channel and customer segment
 in your business. These elasticity models avoid most common demand confounding effects by using an advanced modeling 
 approach combining the strengths of machine learning and econometrics.
 
-The solution has visualization components both in Power BI and for interactive simulation, in Excel.
+The solution produces Power BI visualizations and allows interactive simulation in Excel.
 
 # Description
 
-This solution brings price elasticity modeling and pricing recommendations to any business with an Azure subscription. 
-It alleviates confounding by the "Double-ML" approach, which subtracts out the predictable components such as 
-seasonal confounding 
-of price and demand variation before estimating the elasticity due to exogenous price changes.
-Additionally, the solution can be customized to use data reflecting other 
+The Interactive Pricing Analytics (IPA) solution brings price elasticity modeling 
+and pricing recommendations to any business with an Azure subscription. 
+It alleviates confounding by the "Double-ML" approach, which subtracts out the predictable 
+components of price and demand variation (such as seasonal swings) before estimating 
+the elasticity. The residual unexplained variation in price is taken to be due to exogenous 
+price changes and the unexplained demand response to be the true price effect.
+Additionally, the solution can be customized to use any data reflecting other 
 potential external demand drivers.
 
-Additionally, estimating demand for item, sites, and channels with sparse demand is a challenge,
-and existing pricing solutions often only give estimates at product category level. Our pricing solution
-uses "hierarchical regularization" to produce consistent estimates 
+Additionally, estimating demand for slow-moving items is a challenge,
+and existing pricing solutions often only give estimates at product category level. 
+Our pricing solution uses "hierarchical regularization" to produce consistent estimates 
 down to the individual product level in such data-poor situations. 
 Simply put, in absence of strong evidence, the model borrows information from other items in the same category, 
-same items in other sites, and so on. As data for an item increases, its elasticity estimate will be
-fine-tuned more specifically.
+same items in other sites, and so on. As number of transactions in an individual item increases, 
+its elasticity estimate will be fine-tuned more specifically.
 
-The services this solution consists of include
+The services in this solution include
 
 * showing you in one glance how elastic your product demand is,
 * providing pricing recommendations for every product in your item catalog,
 * discovering which products are related as substitutes and complements,
 * simulating promotional pricing scenarios.
 
-All information is provided at the level at which you need for detailed control of your price and inventory.
+All information is provided at the fine-grained level that you need 
+for detailed control of your price and inventory: item, site, channel and customer segment.
 
 Additional detail on the data science of prices are in our 
 [blog post](https://blogs.msdn.microsoft.com/intel/archives/1015).
@@ -66,7 +69,7 @@ incremental gross margin.
 
 # Getting Started
 
-#### Estimated Provisioning time: 20 minutes
+#### Estimated Provisioning time: 15 minutes
 
 You can install a running copy of this solution in your existing Azure subscription.
 [Deploy the solution from the Cortana Intelligence Quick Start Page](https://aka.ms/pricingciqs).
