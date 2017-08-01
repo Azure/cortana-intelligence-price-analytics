@@ -31,8 +31,7 @@ You have already completed the first step of those instructions (set up web serv
 
 Follow the instructions in the spreadsheet, but choose A18 as the destination (output) cell. 
 As <tt>datasetName</tt> parameter of the service, you can use 'latestDemoBuild'
-if the solution has run for a while and a model has been generated.
-For forecastPeriod, choose 3. 
+if the solution has run for a while and a model has been generated. 
 
 If the table at A18 fills out successfully, then your model has already been built by Azure Data Factory. 
 If you get an error, please build a model according to the instructions in the next section.
@@ -50,14 +49,14 @@ In this case, build a model from your data ad-hoc.
 
 To build a model, open the Excel workbook and navigate to the Data and Model tab.
 Follow the instructions on the spreadsheet, choosing some name other than
-'latestDemoBuild' for the datasetName.
+'latestDemoBuild' for the datasetName. For forecastPeriod, choose 3.
 
 Creating the model will take about 3 minutes for the OJ dataset and produces
 as output the lists of valid values for Products, Locations, etc. that the model
 recognizes. 
 
 Now repeat the instructions in the Promotion Simulation exercise with the 
-datasetName being your chosen one.
+datasetName being your chosen one. You may need to change the values in the CurrentDate columnn to correspond with the date range represented in the SalesDates column in the "Data and Model" worksheet.  
 
 ## Building a model from your own data
 
