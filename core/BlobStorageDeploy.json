@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+  },
+  "variables": {
+    "namePrefix": "[replace(resourceGroup().name, '-', '')]",
+    "uniqueNamePrefix": "[concat(variables('namePrefix'), uniqueString(subscription().subscriptionId))]",
+    "storageApiVersion": "2016-01-01",
+    "storageAccountName": "[variables('uniqueNamePrefix')]",
+    "storageAccountNameToLower": "[toLower(variables('storageAccountName'))]",
+    "storageAccountType": "Standard_LRS"
+  },
+  "resources": [
+    {
+      "name": "[variables('storageAccountNameToLower')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('storageApiVersion')]",
+      "sku": {
+        "name": "[variables('storageAccountType')]"
+      },
+      "kind": "Storage",
+      "dependsOn": [ ],
+      "properties": {
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageAccountNameToLower')]"
+    },
+    "storageAccountKey": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountNameToLower')), variables('storageApiVersion')).keys[0].value]"
+    }
+  }
+}	
+				
+			

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sqlServerUser": {
+      "type": "string",
+      "metadata": {
+        "description": "User name for SQL Server"
+      }
+    },
+    "sqlServerPasswd": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for SQL Server"
+      }
+    }
+  },
+  "variables": {
+    "namePrefix": "[replace(resourceGroup().name, '-', '')]",
+    "uniqueNamePrefix": "[toLower(concat(variables('namePrefix'), uniqueString(subscription().subscriptionId)))]",
+    "sqlApiVersion": "2014-04-01-preview",
+    "sqlServerName": "[concat(variables('uniqueNamePrefix'),'srv')]",
+    "sqlDbName": "pricingdemo",
+    "sqlServerVersion": "12.0",
+    "edition": "Standard",
+    "databaseTier": "S2",
+    "collation": "SQL_Latin1_General_CP1_CI_AS",
+    "maxSizeBytes": "2147483648",
+    "startIpAddress": "0.0.0.0",
+    "endIpAddress": "255.255.255.255"
+  },
+  "resources": [
+    {
+      "name": "[variables('sqlServerName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('sqlApiVersion')]",
+      "properties": {
+        "administratorLogin": "[parameters('sqlServerUser')]",
+        "administratorLoginPassword": "[parameters('sqlServerPasswd')]",
+        "version": "[variables('sqlServerVersion')]"
+      },
+      "resources": [
+        {
+          "name": "[variables('sqlDbName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "[variables('sqlApiVersion')]",
+          "dependsOn": [ "[concat('Microsoft.Sql/servers/', variables('sqlServerName'))]" ],
+          "properties": {
+            "edition": "[variables('edition')]",
+            "requestedServiceObjectiveName": "[variables('databaseTier')]",
+            "collation": "[variables('collation')]",
+            "maxSizeBytes": "[variables('maxSizeBytes')]"
+          }
+        },
+        {
+          "apiVersion": "[variables('sqlApiVersion')]",
+          "dependsOn": [ "[concat('Microsoft.Sql/servers/', variables('sqlServerName'))]" ],
+          "location": "[resourceGroup().location]",
+          "name": "AllowAllWindowsAzureIps",
+          "properties": {
+            "startIpAddress": "[variables('startIpAddress')]",
+            "endIpAddress": "[variables('endIpAddress')]"
+          },
+          "type": "firewallrules"
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "sqlServerName": {
+      "type": "string",
+      "value": "[variables('sqlServerName')]"
+    },
+    "sqlDbName": {
+      "type": "string",
+      "value": "[variables('sqlDbName')]"
+    },
+    "sqlDbConnectionString": {
+      "type": "string",
+      "value": "[concat('Data Source=tcp:', variables('sqlServerName'), '.database.windows.net,1433;Initial Catalog=', variables('sqlDbName'), ';Integrated Security=False;User ID=', parameters('sqlServerUser'), ';Password=', parameters('sqlServerPasswd'), ';Connect Timeout=30;Encrypt=True')]"
+    },
+    "sqlServerUrl": {
+      "type": "string",
+      "value": "[concat('https://portal.azure.com/#resource/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Sql/servers/', variables('sqlServerName'), '/overview')]"
+    }
+  }
+}

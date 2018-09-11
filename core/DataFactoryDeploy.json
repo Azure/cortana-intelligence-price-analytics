@@ -1,0 +1,1643 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sqlDbConnectionString": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Connection string for SQL DB"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of Storage Account"
+      }
+    },
+    "storageAccountKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Key for Storage Account"
+      }
+    },
+    "mlBuildModelEndpointUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Batch Execution Endpoint URL for Machine Learning Service"
+      }
+    },
+    "mlBuildModelApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "API Key for Machine Learning Service"
+      }
+    },
+    "mlCrossElastEndpointUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Batch Execution Endpoint URL for Machine Learning Service"
+      }
+    },
+    "mlCrossElastApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "API Key for Machine Learning Service"
+      }
+    },
+    "mlElastEndpointUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Batch Execution Endpoint URL for Machine Learning Service"
+      }
+    },
+    "mlElastApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "API Key for Machine Learning Service"
+      }
+    },
+    "mlFcastEndpointUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Batch Execution Endpoint URL for Machine Learning Service"
+      }
+    },
+    "mlFcastApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "API Key for Machine Learning Service"
+      }
+    },
+    "loggingBlobContainer": {
+      "type": "string",
+      "metadata": {
+        "description": "Blob container for intermediate storage"
+      }
+    },
+    "pricingDataBlobContainer": {
+      "type": "string",
+      "metadata": {
+        "description": "Blob container for intermediate storage"
+      }
+    }
+  },
+  "variables": {
+    "namePrefix": "[resourceGroup().name]",
+    "uniqueNamePrefix": "[toLower(concat(variables('namePrefix'), uniqueString(subscription().subscriptionId)))]",
+    "dataFactoryName": "[concat(variables('uniqueNamePrefix'),'df')]",
+    "dataFactoryApiVersion": "2015-10-01",
+    "pipelineFrequency": "Week",
+    "storageAccountConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', parameters('storageAccountKey'))]"
+  },
+  "resources": [
+    {
+      "name": "[variables('dataFactoryName')]",
+      "apiVersion": "[variables('dataFactoryApiVersion')]",
+      "type": "Microsoft.DataFactory/datafactories",
+      "location": "northeurope",
+      "resources": [
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "linkedservices",
+          "name": "demostorage_AzureStorageLinkedService",
+          "properties": {
+            "description": "Blob storage account for logging and staging",
+            "type": "AzureStorage",
+            "typeProperties": {
+              "connectionString": "[variables('storageAccountConnectionString')]"
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "linkedservices",
+          "name": "demodb_AzureSqlLinkedService",
+          "properties": {
+            "description": "",
+            "type": "AzureSqlDatabase",
+            "typeProperties": {
+              "connectionString": "[parameters('sqlDbConnectionString')]"
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "linkedservices",
+          "name": "BuildModel_AzureMLLinkedService",
+          "properties": {
+            "description": "",
+            "type": "AzureML",
+            "typeProperties": {
+              "mlEndpoint": "[parameters('mlBuildModelEndpointUrl')]",
+              "apiKey": "[parameters('mlBuildModelApiKey')]"
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "linkedservices",
+          "name": "GetBulkForecasts_AzureMLLinkedService",
+          "properties": {
+            "description": "",
+            "type": "AzureML",
+            "typeProperties": {
+              "mlEndpoint": "[parameters('mlFcastEndpointUrl')]",
+              "apiKey": "[parameters('mlFcastApiKey')]"
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "linkedservices",
+          "name": "GetBulkElasticities_AzureMLLinkedService",
+          "properties": {
+            "description": "",
+            "type": "AzureML",
+            "typeProperties": {
+              "mlEndpoint": "[parameters('mlElastEndpointUrl')]",
+              "apiKey": "[parameters('mlElastApiKey')]"
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "linkedservices",
+          "name": "GetBulkCrossPrice_AzureMLLinkedService",
+          "properties": {
+            "description": "",
+            "type": "AzureML",
+            "typeProperties": {
+              "mlEndpoint": "[parameters('mlCrossElastEndpointUrl')]",
+              "apiKey": "[parameters('mlCrossElastApiKey')]"
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "BuildModel_Log_Dataset",
+          "properties": {
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "adfrunlog.csv",
+              "folderPath": "[concat(parameters('loggingBlobContainer'), '/yearno={Year}/monthno={Month}/dayno={Day}/')]",
+              "format": {
+                "type": "TextFormat"
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "cleaned_transactiondata_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "Item",
+                "type": "String"
+              },
+              {
+                "name": "SalesDate",
+                "type": "String"
+              },
+              {
+                "name": "Site",
+                "type": "String"
+              },
+              {
+                "name": "Channel",
+                "type": "String"
+              },
+              {
+                "name": "Segment",
+                "type": "String"
+              },
+              {
+                "name": "ItemHierarchy",
+                "type": "String"
+              },
+              {
+                "name": "Units",
+                "type": "Double"
+              },
+              {
+                "name": "UnitPrice",
+                "type": "Double"
+              },
+              {
+                "name": "UnitCost",
+                "type": "Double"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "PEdata.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/originaldata/yearno={Year}/monthno={Month}/dayno={Day}/')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "cross_els_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "Location",
+                "type": "String"
+              },
+              {
+                "name": "Current Date",
+                "type": "Datetime"
+              },
+              {
+                "name": "Segment",
+                "type": "String"
+              },
+              {
+                "name": "Impacting Product",
+                "type": "String"
+              },
+              {
+                "name": "Impacting Channel",
+                "type": "String"
+              },
+              {
+                "name": "Impacted Product",
+                "type": "String"
+              },
+              {
+                "name": "Impacted Channel",
+                "type": "String"
+              },
+              {
+                "name": "Cross-Price Elasticity",
+                "type": "Double"
+              },
+              {
+                "name": "External Figure Links",
+                "type": "String"
+              },
+              {
+                "name": "ADF Unescaped Comma Junk",
+                "type": "String"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "crosselasticities.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/crosselasticity/{Year}/{Month}/{Day}/')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "forecasts_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "Periods Ahead",
+                "type": "Int32"
+              },
+              {
+                "name": "Forecast From Date",
+                "type": "Datetime"
+              },
+              {
+                "name": "Sale Date",
+                "type": "Datetime"
+              },
+              {
+                "name": "Location",
+                "type": "String"
+              },
+              {
+                "name": "Product",
+                "type": "String"
+              },
+              {
+                "name": "Channel",
+                "type": "String"
+              },
+              {
+                "name": "Segment",
+                "type": "String"
+              },
+              {
+                "name": "Forecast",
+                "type": "Double"
+              },
+              {
+                "name": "CI LB",
+                "type": "Double"
+              },
+              {
+                "name": "CI UB",
+                "type": "Double"
+              },
+              {
+                "name": "Actual Sales",
+                "type": "Double"
+              },
+              {
+                "name": "sAPE",
+                "type": "Double"
+              },
+              {
+                "name": "qBar",
+                "type": "Double"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "forecasts.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/forecasts/{Year}/{Month}/{Day}')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "elasticities_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "Elasticity on Date",
+                "type": "String"
+              },
+              {
+                "name": "Product",
+                "type": "String"
+              },
+              {
+                "name": "Location",
+                "type": "String"
+              },
+              {
+                "name": "Channel",
+                "type": "String"
+              },
+              {
+                "name": "Segment",
+                "type": "String"
+              },
+              {
+                "name": "Elasticity",
+                "type": "Double"
+              },
+              {
+                "name": "90% CI LB Elasticity",
+                "type": "Double"
+              },
+              {
+                "name": "90% CI UB Elasticity",
+                "type": "Double"
+              },
+              {
+                "name": "External Figure Links",
+                "type": "String"
+              },
+              {
+                "name": "ADF Unescaped Comma Junk",
+                "type": "String"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "elasticities.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/elasticity/{Year}/{Month}/{Day}/')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "params_BulkCrossPrice_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "WeekJump",
+                "type": "Int32"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "bulkCrossPriceParams.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/serviceparameters/{Year}/{Month}/{Day}/')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "params_BulkElasticities_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "DeltaX",
+                "type": "Double"
+              },
+              {
+                "name": "WeekJump",
+                "type": "Int32"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "bulkElasticityParams.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/serviceparameters/{Year}/{Month}/{Day}/')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demostorage_AzureStorageLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "params_BulkForecasts_AzureBlobDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "periodsAhead",
+                "type": "Int32"
+              }
+            ],
+            "published": false,
+            "type": "AzureBlob",
+            "linkedServiceName": "demostorage_AzureStorageLinkedService",
+            "typeProperties": {
+              "fileName": "bulkForecastParams.csv",
+              "folderPath": "[concat(parameters('pricingDataBlobContainer'), '/serviceparameters/{Year}/{Month}/{Day}/')]",
+              "format": {
+                "type": "TextFormat",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "treatEmptyAsNull": true,
+                "skipLineCount": 0,
+                "firstRowAsHeader": true
+              },
+              "partitionedBy": [
+                {
+                  "name": "Year",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "yyyy"
+                  }
+                },
+                {
+                  "name": "Month",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "MM"
+                  }
+                },
+                {
+                  "name": "Day",
+                  "value": {
+                    "type": "DateTime",
+                    "date": "SliceEnd",
+                    "format": "dd"
+                  }
+                }
+              ]
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "crosselasticities_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "CrossElasticities"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "elasticities_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "Elasticities"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "etlBulkCrossElasticities_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "etl.tempCrossElasticities"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "etlBulkElasticities_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "etl.tempElasticities"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "etlBulkForecasts_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "etl.tempForecasts"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "forecasts_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "Forecasts"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "solution_parameters_AzureSQLDataset",
+          "properties": {
+            "structure": [
+              {
+                "name": "paramName",
+                "type": "String"
+              },
+              {
+                "name": "paramValue",
+                "type": "String"
+              }
+            ],
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "Parameters"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            },
+            "external": true,
+            "policy": { }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "transactiondata_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "pricingdata"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            },
+            "external": true,
+            "policy": { }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "datasets",
+          "name": "suggestions_AzureSQLDataset",
+          "properties": {
+            "published": false,
+            "type": "AzureSqlTable",
+            "linkedServiceName": "demodb_AzureSqlLinkedService",
+            "typeProperties": {
+              "tableName": "SuggestionRuns"
+            },
+            "availability": {
+              "frequency": "[variables('pipelineFrequency')]",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService",
+            "elasticities_AzureSQLDataset",
+            "transactiondata_AzureSQLDataset",
+            "suggestions_AzureSQLDataset"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "dataPipelines",
+          "name": "SuggestionPipeline",
+          "properties": {
+            "description": "Generate pricing suggestions",
+            "activities": [
+              {
+                "type": "SqlServerStoredProcedure",
+                "typeProperties": {
+                  "storedProcedureName": "spRecommendProducts",
+                  "storedProcedureParameters": {
+                    "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)",
+                    "lastDayOfData": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)",
+                    "suggestionPeriodStart": "$$Text.Format('{0:yyyy-MM-dd}', Date.AddDays(SliceEnd,1))",
+                    "suggestionPeriodEnd": "$$Text.Format('{0:yyyy-MM-dd}', Date.AddDays(SliceEnd,7))",
+                    "minOrders": "1"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "elasticities_AzureSQLDataset"
+                  },
+                  {
+                    "name": "transactiondata_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "suggestions_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 1
+                },
+                "scheduler": {
+                  "frequency": "Week",
+                  "interval": 1
+                },
+                "name": "GenerateSuggestions_StoredProcedureActivity"
+              }
+            ],
+            "start": "2017-04-01T00:00:00Z",
+            "end": "2018-12-31T00:00:00Z",
+            "isPaused": true,
+            "pipelineMode": "Scheduled"
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService",
+            "demostorage_AzureStorageLinkedService",
+            "solution_parameters_AzureSQLDataset",
+            "params_BulkElasticities_AzureBlobDataset",
+            "params_BulkForecasts_AzureBlobDataset",
+            "params_BulkCrossPrice_AzureBlobDataset"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "dataPipelines",
+          "name": "ConfigureServices_Pipeline",
+          "properties": {
+            "description": "Pipeline to populate the services config",
+            "activities": [
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "SqlSource",
+                    "sqlReaderQuery": "select p1.paramValue as DeltaX, p2.paramValue as WeekJump from Parameters p1, Parameters p2 where p1.paramName = 'BulkElasticities_DeltaX' and p2.paramName = 'BulkElasticities_WeekJump';"
+                  },
+                  "sink": {
+                    "type": "BlobSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "solution_parameters_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "params_BulkElasticities_AzureBlobDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "Config_BulkElasticities_CopyActivity"
+              },
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "SqlSource",
+                    "sqlReaderQuery": "select p1.paramValue as periodsAhead from Parameters p1 where p1.paramName = 'BulkForecasts_periodsAhead';"
+                  },
+                  "sink": {
+                    "type": "BlobSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "solution_parameters_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "params_BulkForecasts_AzureBlobDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "Config_BulkForecasts_CopyActivity"
+              },
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "SqlSource",
+                    "sqlReaderQuery": "select p1.paramValue as WeekJump from Parameters p1 where p1.paramName = 'BulkCrossPrice_WeekJump';"
+                  },
+                  "sink": {
+                    "type": "BlobSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "solution_parameters_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "params_BulkCrossPrice_AzureBlobDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "Config_BulkCrossPrice_CopyActivity"
+              }
+            ],
+            "start": "2017-04-30T00:00:00Z",
+            "end": "2017-12-31T00:00:00Z",
+            "isPaused": true,
+            "pipelineMode": "Scheduled",
+            "expirationTime": "3.00:00:00"
+          }
+        },
+        {
+          "dependsOn": [
+            "[variables('dataFactoryName')]",
+            "demodb_AzureSqlLinkedService",
+            "demostorage_AzureStorageLinkedService",
+            "BuildModel_AzureMLLinkedService",
+            "GetBulkForecasts_AzureMLLinkedService",
+            "GetBulkElasticities_AzureMLLinkedService",
+            "GetBulkCrossPrice_AzureMLLinkedService",
+            "params_BulkElasticities_AzureBlobDataset",
+            "params_BulkForecasts_AzureBlobDataset",
+            "params_BulkCrossPrice_AzureBlobDataset",
+            "BuildModel_Log_Dataset",
+            "transactiondata_AzureSQLDataset",
+            "cleaned_transactiondata_AzureBlobDataset",
+            "forecasts_AzureBlobDataSet",
+            "elasticities_AzureBlobDataset",
+            "cross_els_AzureBlobDataset",
+            "etlBulkElasticities_AzureSQLDataset",
+            "etlBulkForecasts_AzureSQLDataset",
+            "etlBulkCrossElasticities_AzureSQLDataset",
+            "forecasts_AzureSQLDataset",
+            "elasticities_AzureSQLDataset",
+            "crosselasticities_AzureSQLDataset"
+          ],
+          "apiVersion": "[variables('dataFactoryApiVersion')]",
+          "type": "dataPipelines",
+          "name": "Pricing_Pipeline",
+          "properties": {
+            "description": "Weekly model retrain and score pipeline",
+            "activities": [
+              {
+                "type": "AzureMLBatchExecution",
+                "typeProperties": {
+                  "webServiceOutputs": {
+                    "output1": "BuildModel_Log_Dataset"
+                  },
+                  "webServiceInputs": {
+                    "input1": "cleaned_transactiondata_AzureBlobDataset"
+                  },
+                  "globalParameters": {
+                    "datasetName": "latestDemoBuild",
+                    "forecastPeriod": 3
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "cleaned_transactiondata_AzureBlobDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "BuildModel_Log_Dataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "06:00:00",
+                  "concurrency": 1,
+                  "retry": 2
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "Retrain_Model_Activity",
+                "description": "Re-train the pricing engine model",
+                "linkedServiceName": "BuildModel_AzureMLLinkedService"
+              },
+              {
+                "type": "AzureMLBatchExecution",
+                "typeProperties": {
+                  "webServiceOutputs": {
+                    "output1": "elasticities_AzureBlobDataset"
+                  },
+                  "webServiceInputs": {
+                    "input1": "params_BulkElasticities_AzureBlobDataset"
+                  },
+                  "globalParameters": {
+                    "datasetName": "latestDemoBuild"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "params_BulkElasticities_AzureBlobDataset"
+                  },
+                  {
+                    "name": "BuildModel_Log_Dataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "elasticities_AzureBlobDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 1
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "GetBulkElasticities_AzureMLExecutionActivity",
+                "linkedServiceName": "GetBulkElasticities_AzureMLLinkedService"
+              },
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "SqlSource",
+                    "sqlReaderQuery": "$$Text.Format('select Item, SalesDate, SiteName as Site, ChannelName as Channel, CustomerSegment as Segment, ItemHierarchy, Quantity as Units, UnitPrice, UnitCost from pricingdata where \\'{0:yyyy-MM-dd}\\' >= SalesDate;', SliceEnd)"
+                  },
+                  "sink": {
+                    "type": "BlobSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "transactiondata_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "cleaned_transactiondata_AzureBlobDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "clean_and_copy_originaldata"
+              },
+              {
+                "type": "AzureMLBatchExecution",
+                "typeProperties": {
+                  "webServiceOutputs": {
+                    "output1": "forecasts_AzureBlobDataSet"
+                  },
+                  "webServiceInputs": {
+                    "input1": "params_BulkForecasts_AzureBlobDataset"
+                  },
+                  "globalParameters": {
+                    "datasetName": "latestDemoBuild"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "params_BulkForecasts_AzureBlobDataset"
+                  },
+                  {
+                    "name": "BuildModel_Log_Dataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "forecasts_AzureBlobDataSet"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "GetBulkForecasts_AzureMLExecutionActivity",
+                "linkedServiceName": "GetBulkForecasts_AzureMLLinkedService"
+              },
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "BlobSource"
+                  },
+                  "sink": {
+                    "type": "SqlSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "elasticities_AzureBlobDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "etlBulkElasticities_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 2
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "bulkElasticities_to_DB_CopyActivity"
+              },
+              {
+                "type": "SqlServerStoredProcedure",
+                "typeProperties": {
+                  "storedProcedureName": "spIngestBulkElasticities",
+                  "storedProcedureParameters": {
+                    "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "etlBulkElasticities_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "elasticities_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 2
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "ingestElasticities_StoredProcedureActivity"
+              },
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "BlobSource"
+                  },
+                  "sink": {
+                    "type": "SqlSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "forecasts_AzureBlobDataSet"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "etlBulkForecasts_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "bulkForecasts_to_DB_CopyActivity"
+              },
+              {
+                "type": "SqlServerStoredProcedure",
+                "typeProperties": {
+                  "storedProcedureName": "spIngestBulkForecasts",
+                  "storedProcedureParameters": {
+                    "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)",
+                    "Source": "ADF_from_GetBulkForecasts"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "etlBulkForecasts_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "forecasts_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "ingestForecasts_StoredProcedureActivity"
+              },
+              {
+                "type": "AzureMLBatchExecution",
+                "typeProperties": {
+                  "webServiceOutputs": {
+                    "output1": "cross_els_AzureBlobDataset"
+                  },
+                  "webServiceInputs": {
+                    "input1": "params_BulkCrossPrice_AzureBlobDataset"
+                  },
+                  "globalParameters": {
+                    "datasetName": "latestDemoBuild"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "params_BulkCrossPrice_AzureBlobDataset"
+                  },
+                  {
+                    "name": "BuildModel_Log_Dataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "cross_els_AzureBlobDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "GetBulkCrossPrice_AzureMLExecutionActivity",
+                "linkedServiceName": "GetBulkCrossPrice_AzureMLLinkedService"
+              },
+              {
+                "type": "Copy",
+                "typeProperties": {
+                  "source": {
+                    "type": "BlobSource"
+                  },
+                  "sink": {
+                    "type": "SqlSink",
+                    "writeBatchSize": 0,
+                    "writeBatchTimeout": "00:00:00"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "cross_els_AzureBlobDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "etlBulkCrossElasticities_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "1.00:00:00",
+                  "concurrency": 1,
+                  "retry": 3
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "bulk_cross_price_to_DB_CopyActivity"
+              },
+              {
+                "type": "SqlServerStoredProcedure",
+                "typeProperties": {
+                  "storedProcedureName": "spIngestBulkCrossPrice",
+                  "storedProcedureParameters": {
+                    "SliceEnd": "$$Text.Format('{0:yyyy-MM-dd}', SliceEnd)"
+                  }
+                },
+                "inputs": [
+                  {
+                    "name": "etlBulkCrossElasticities_AzureSQLDataset"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "crossElasticities_AzureSQLDataset"
+                  }
+                ],
+                "policy": {
+                  "timeout": "01:00:00",
+                  "concurrency": 1,
+                  "retry": 1
+                },
+                "scheduler": {
+                  "frequency": "[variables('pipelineFrequency')]",
+                  "interval": 1
+                },
+                "name": "ingestCrossPrice_StoredProcedureActivity"
+              }
+            ],
+            "start": "2017-03-09T00:00:00Z",
+            "end": "2017-12-31T00:00:00Z",
+            "isPaused": true,
+            "pipelineMode": "Scheduled"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "dataFactoryName": {
+      "type": "string",
+      "value": "[variables('dataFactoryName')]"
+    },
+    "dataFactoryUrl": {
+      "type": "string",
+      "value": "[concat('https://portal.azure.com/#resource/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.DataFactory/dataFactories/', variables('dataFactoryName'))]"
+    }
+  }
+}
