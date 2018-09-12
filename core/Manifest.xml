@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Template>
+  <Category>Solution</Category>
+  <Title>Interactive Price Analytics</Title>
+  <IsLegacyTemplate>true</IsLegacyTemplate>
+  <Owners>
+    <Owner displayname="BizOpsEcon - Tomas Singliar" email="tosingli@microsoft.com" />
+    <Owner displayname="BizOpsEcon - Eric Wright" email="erwright@microsoft.com" />
+    <Owner displayname="BizOpsEcon - John-Mark Agosta" email="joagosta@microsoft.com" />
+  </Owners>
+  <PublishedOn>09/13/2017</PublishedOn>
+  <ImageUrl>{PatternAssetBaseUrl}/images/solutionicon.png</ImageUrl>
+  <Description>
+    Are you making the most of your product pricing?
+
+    Use your transactional history to see how the demand for your products responds to prices, to recommend pricing changes, and to simulate how price changes would affect demand, at a fine granularity.
+
+    See results in Power BI dashboards and use interactive what-if features like promotion simulation from Excel.
+  </Description>
+  <LongDescription>
+    This Pricing Analytics solution uses your sales history transactional data to predict how the demand 
+    for your products responds to offered prices. This way you can recommend pricing changes, and  
+    simulate how changes in price would affect your demand, at the level of individual products.
+
+    The core of the solution is the ability to
+    estimate price elasticities for every product, site, channel and customer segment
+    in your business. These elasticity models avoid most common demand confounding effects by using an advanced modeling 
+    approach combining the strengths of machine learning and econometrics.
+
+    The solution has visualization components both in Power BI and for interactive simulation, in Excel. The Power BI dashboard shows optimal pricing recommendations, item elasticities at a item-site-channel-segment level, estimates of related-product effects such as cannibalization, forecasts given current process, and model perfomance metrics.
+
+    Direct interaction with the pricing model in Excel lets you simply paste your sales data there and analyze your prices without the need to integrate the data into the solution database first. In Excel you can simulate promotions and plot demand curves (showing demand response to price), and access dashboard data in numerical form.
+
+    The rich functionality is not confined to Excel. It is driven by web services that you, or your implementation partner, can call directly from your business applications, integrating price analysis into your business applications.
+  </LongDescription>
+  <Partners>
+  </Partners>
+  <Summary src="markdown\Summary.md" format="markdown" />
+  <TryItNow url="https://msit.powerbi.com/view?r=eyJrIjoiNjI2ZTU4NGQtMmJiZC00MjE1LWE5NTQtM2UwZWI2ZGNhMDNhIiwidCI6IjcyZjk4OGJmLTg2ZjEtNDFhZi05MWFiLTJkN2NkMDExZGI0NyIsImMiOjV9" />
+  <EstimatedTime>15 Minutes</EstimatedTime>
+  <Ingredients>
+    <Ingredient>MachineLearning</Ingredient>
+    <Ingredient>Sql</Ingredient>
+    <Ingredient>PowerBi</Ingredient>
+    <Ingredient>DataFactory</Ingredient>
+  </Ingredients>
+  <Tags>
+    <Tag>Operations Management</Tag>
+    <Tag>Cortana Intelligence</Tag>
+    <Tag>Pricing Optimization</Tag>
+    <Tag>Price Elasticity</Tag>
+  </Tags>
+  <Feedback email="erwright@microsoft.com" />
+
+  <ProvisioningSteps> 
+    <Manual parameterSource="SqlDeploy.json" title="Setup SQL Server Account">
+      <Parameters>
+        <Credential type="sql" username="sqlServerUser" password="sqlServerPasswd" />
+      </Parameters>
+    </Manual>
+    
+    <ArmDeployment source="BlobStorageDeploy.json" title="Deploying Blob Storage" />
+
+    <AzureFunctionApp alwaysOn="false" use32BitWorkerProcess="false" servicePlanSku="B2" servicePlanTier="Basic" createStorageAccount="false">
+      <AppSettings>
+        <!-- Uncomment the below settings and set createStorageAccount to true to enable Azure Functions debugging features -->
+        <Add key="AzureWebJobsStorage" value="DefaultEndpointsProtocol=https;AccountName={Outputs.storageAccountName};AccountKey={Outputs.storageAccountKey}" />
+        <Add key="AzureWebJobsDashboard" value="DefaultEndpointsProtocol=https;AccountName={Outputs.storageAccountName};AccountKey={Outputs.storageAccountKey}" />
+      </AppSettings>
+    </AzureFunctionApp>
+    
+    <Function name="BlobSetup" title="Configuring Storage Containers">
+            <Parameters>
+                <Parameter name="storageAccountName" defaultValue="{Outputs.storageAccountName}" hidden="true" />
+                <Parameter name="storageAccountKey" defaultValue="{Outputs.storageAccountKey}" hidden="true" />
+                <Parameter name="scriptBundlePath" hidden="true">
+                    <DefaultValue>{PatternAssetBaseUrl}\PricingEngine_Python_Dependencies.zip</DefaultValue>
+                </Parameter>                                                           
+                <Parameter name="pricingResourceContainerName" defaultValue="pricing-resources" hidden="true" />
+                <Parameter name="adfLoggingContainerName" defaultValue="pricing-logs" hidden="true" />
+                <Parameter name="adfPricingDataContainerName" defaultValue="pricing-data" hidden="true" />
+            </Parameters>
+        </Function>
+         
+        <ArmDeployment source="MLDeploy.json" title="Deploying ML Webservices">
+        <Parameters>
+            <Parameter name="billingPlanTier" defaultValue="S1" hidden="true" />
+            <Parameter name="storageAccountName" defaultValue="{Outputs.storageAccountName}" hidden="true" />
+            <Parameter name="storageAccountKey" defaultValue="{Outputs.storageAccountKey}" hidden="true" />
+            <Parameter name="storageAccountContainerName" defaultValue="{Outputs.pricingResourceContainerName}" hidden="true" />
+            <Parameter name="pythonBundleUri" defaultValue="{Outputs.scriptBundleUri}" hidden="true" />
+        </Parameters>
+        </ArmDeployment>
+        
+    <Function name="GetMLBESCreds" title="Retrieving ML Credentials (BES)">
+      <Parameters>
+        <Parameter name="subscriptionId" defaultValue="{SubscriptionId}" hidden="true" />
+        <Parameter name="resourceGroupName" defaultValue="{ResourceGroup.Name}" hidden="true" />
+        <Parameter name="authorizationToken" type="string" defaultValue="{Authorization}" hidden="true" />
+        <Parameter name="buildModelServiceName" defaultValue="{Outputs.amlBuildWebServiceName}" hidden="true" />
+        <Parameter name="fcastServiceName" defaultValue="{Outputs.amlGetBulkForecastsWebServiceName}" hidden="true" />
+        <Parameter name="elastServiceName" defaultValue="{Outputs.amlGetBulkElasticitiesWebServiceName}" hidden="true" />
+        <Parameter name="crossElastServiceName" defaultValue="{Outputs.amlGetBulkCrossPriceWebServiceName}" hidden="true" />
+        <Parameter name="mlWsApiVersion" defaultValue="2016-05-01-preview" hidden="true" />
+      </Parameters>
+    </Function>
+        
+      <Function name="GetMLRRSCreds" title="Retrieving ML Credentials (RRS)">
+      <Parameters>
+        <Parameter name="subscriptionId" defaultValue="{SubscriptionId}"  hidden="true" />
+        <Parameter name="resourceGroupName" defaultValue="{ResourceGroup.Name}"  hidden="true" />
+        <Parameter name="authorizationToken" type="string" defaultValue="{Authorization}" hidden="true" />
+        <Parameter name="mlWsApiVersion" defaultValue="2016-05-01-preview" hidden="true" />
+        <Parameter name="webServiceNames" hidden="true">
+                    <DefaultValue>
+                        {Outputs.amlGetElastWebServiceName};
+                        {Outputs.amlCrossPriceMatrixWebServiceName};
+                        {Outputs.amlPromotionWebServiceName};
+                        {Outputs.amlDemandCurveWebServiceName};
+                        {Outputs.amlForecastWebServiceName};
+                        {Outputs.amlRetrospectiveWebServiceName};
+                        {Outputs.amlGetOutliersWebServiceName}   
+                    </DefaultValue>
+       </Parameter> 
+      </Parameters>
+    </Function> 
+    
+    <ArmDeployment source="SqlDeploy.json" title="Deploying SQL Server Resources" autoResolveParameters="true" />
+
+    <Function name="SqlDbSetup" title="Creating SQL Database Objects">
+      <Parameters>
+        <Parameter name="sqlServerName" defaultValue="{Outputs.sqlServerName}"  hidden="true" />
+        <Parameter name="sqlServerUser" defaultValue="{Inputs.sqlServerUser}"  hidden="true" />
+        <Parameter name="sqlServerPasswd" defaultValue="{Inputs.sqlServerPasswd}"  hidden="true" />
+        <Parameter name="sqlDbName" defaultValue="{Outputs.sqlDbName}"  hidden="true" />
+        <Parameter name="createObjectsScriptPath" defaultValue="{PatternAssetBaseUrl}\create_db_objects.sql"  hidden="true" />
+        <Parameter name="OJDataPath" defaultValue="{PatternAssetBaseUrl}\oj_raw.csv"  hidden="true" />
+        <Parameter name="fcastDataPath" defaultValue="{PatternAssetBaseUrl}\forecasts.csv"  hidden="true" />
+        <Parameter name="elastDataPath" defaultValue="{PatternAssetBaseUrl}\elasticities.csv"  hidden="true" />
+        <Parameter name="crossElastDataPath" defaultValue="{PatternAssetBaseUrl}\cross_elasticities.csv"  hidden="true" />
+        <Parameter name="underOverDataPath" defaultValue="{PatternAssetBaseUrl}\underover.csv"  hidden="true" />
+        <Parameter name="suggestionRunsDataPath" defaultValue="{PatternAssetBaseUrl}\suggestion_runs.csv"  hidden="true" />
+        <Parameter name="postBcpScriptPath" defaultValue="{PatternAssetBaseUrl}\post_bcp_actions.sql"  hidden="true" />
+      </Parameters>
+    </Function>
+    
+    <ArmDeployment source="DataFactoryDeploy.json" title="Deploying Data Factory">
+      <LocationProvidedFor>
+        <ResourceType>Microsoft.DataFactory/datafactories</ResourceType>
+      </LocationProvidedFor>
+      <Parameters>
+        <Parameter name="sqlDbConnectionString" defaultValue="{Outputs.sqlDbConnectionString}" hidden="true" />
+        <Parameter name="storageAccountName" defaultValue="{Outputs.storageAccountName}" hidden="true" />
+        <Parameter name="storageAccountKey" defaultValue="{Outputs.storageAccountKey}" hidden="true" />
+        <Parameter name="mlBuildModelEndpointUrl" defaultValue="{Outputs.mlBuildModelEndpointUrl}" hidden="true" />
+        <Parameter name="mlBuildModelApiKey" defaultValue="{Outputs.mlBuildModelApiKey}" hidden="true" />
+        <Parameter name="mlFcastEndpointUrl" defaultValue="{Outputs.mlFcastEndpointUrl}" hidden="true" />
+        <Parameter name="mlFcastApiKey" defaultValue="{Outputs.mlFcastApiKey}" hidden="true" />
+        <Parameter name="mlElastEndpointUrl" defaultValue="{Outputs.mlElastEndpointUrl}" hidden="true" />
+        <Parameter name="mlElastApiKey" defaultValue="{Outputs.mlElastApiKey}" hidden="true" />
+        <Parameter name="mlCrossElastEndpointUrl" defaultValue="{Outputs.mlCrossElastEndpointUrl}" hidden="true" />
+        <Parameter name="mlCrossElastApiKey" defaultValue="{Outputs.mlCrossElastApiKey}" hidden="true" />
+        <Parameter name="loggingBlobContainer" defaultValue="{Outputs.adfLoggingContainerName}" hidden="true" />
+        <Parameter name="pricingDataBlobContainer" defaultValue="{Outputs.adfPricingDataContainerName}" hidden="true" />
+      </Parameters>
+    </ArmDeployment>
+
+    <Function name="StartPipelines" title="Activating Data Factory Pipelines">
+      <Parameters>
+        <Parameter name="subscriptionId" defaultValue="{SubscriptionId}"  hidden="true" />
+        <Parameter name="resourceGroupName" defaultValue="{ResourceGroup.Name}"  hidden="true" />
+        <Parameter name="dataFactoryName" defaultValue="{Outputs.dataFactoryName}"  hidden="true" />
+        <Parameter name="authorizationToken" type="string" defaultValue="{Authorization}" hidden="true" />
+        <Parameter name="pipelineActiveWeeks" type="int" defaultValue="12" hidden="true" />
+      </Parameters>
+    </Function>
+    <!--<SolutionDashboard>
+      <Parameters>
+        <Parameter hidden="true" name="pbixFileUrl" defaultValue="{PatternAssetBaseUrl}\pricingDashboard.pbix" />
+        <Parameter hidden="true" name="sqlServer" defaultValue="{Outputs.sqlServerName}" />
+        <Parameter hidden="true" name="sqlDatabase" defaultValue="{Outputs.sqlDbName}" />
+        <Parameter hidden="true" name="sqlServerUsername" defaultValue="{Inputs.sqlServerUser}" />
+        <Parameter hidden="true" name="sqlServerPassword" defaultValue="{Inputs.sqlServerPasswd}" />
+      </Parameters>
+    </SolutionDashboard>-->
+    <Manual title="Done">
+      <Instructions src="markdown\Instructions.md" format="markdown" />
+    </Manual>
+  </ProvisioningSteps>
+</Template>
